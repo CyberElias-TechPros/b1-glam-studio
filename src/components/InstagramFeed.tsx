@@ -182,7 +182,7 @@ function FollowButton() {
   );
 }
 
-export default function InstagramFeed() {
+export function InstagramFeed() {
   return (
     <section className="section-padding bg-secondary">
       <div className="container-narrow mx-auto">

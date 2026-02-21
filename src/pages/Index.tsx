@@ -6,7 +6,7 @@ import Layout from "@/components/Layout";
 import { AnimatedSection, SectionHeading, GoldDivider, ParallaxCard, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
 import { ParallaxHero } from "@/components/ParallaxHero";
 import { GoldParticles } from "@/components/GoldParticles";
-import InstagramFeed from "@/components/InstagramFeed";
+import { InstagramFeed } from "@/components/InstagramFeed";
 import heroImage from "@/assets/hero-beauty.jpg";
 
 const services = [
