@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { ArrowRight, Star, Sparkles, Crown, Camera, Heart } from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, GoldDivider } from "@/components/AnimatedSection";
+import { AnimatedSection, SectionHeading, GoldDivider, ParallaxCard, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
+import { ParallaxHero } from "@/components/ParallaxHero";
+import { GoldParticles } from "@/components/GoldParticles";
+import InstagramFeed from "@/components/InstagramFeed";
 import heroImage from "@/assets/hero-beauty.jpg";
 
 const services = [
@@ -12,12 +16,12 @@ const services = [
 ];
 
 const portfolioItems = [
-  { category: "Bridal", gradient: "from-amber-900/40 to-yellow-900/20" },
-  { category: "Event Glam", gradient: "from-rose-900/40 to-amber-900/20" },
-  { category: "Editorial", gradient: "from-violet-900/40 to-amber-900/20" },
-  { category: "Dark Skin", gradient: "from-orange-900/40 to-yellow-900/20" },
-  { category: "Bold Look", gradient: "from-red-900/40 to-amber-900/20" },
-  { category: "Soft Glam", gradient: "from-pink-900/40 to-amber-900/20" },
+  { category: "Bridal", gradient: "from-amber-900/60 via-yellow-800/40 to-yellow-700/20" },
+  { category: "Event Glam", gradient: "from-amber-800/60 via-orange-700/40 to-yellow-600/20" },
+  { category: "Editorial", gradient: "from-yellow-900/60 via-amber-800/40 to-orange-700/20" },
+  { category: "Dark Skin", gradient: "from-amber-700/60 via-yellow-600/40 to-orange-500/20" },
+  { category: "Bold Look", gradient: "from-yellow-800/60 via-amber-700/40 to-orange-600/20" },
+  { category: "Soft Glam", gradient: "from-amber-600/60 via-yellow-500/40 to-orange-400/20" },
 ];
 
 const testimonials = [
@@ -27,20 +31,19 @@ const testimonials = [
 ];
 
 export default function Index() {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt="B1touch Artistry - Professional makeup artistry"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
-        </div>
-
+      {/* Hero Section with Parallax */}
+      <ParallaxHero backgroundImage={heroImage}>
         <div className="relative z-10 container-narrow mx-auto px-4 sm:px-6 lg:px-8 py-32">
           <div className="max-w-2xl">
             <motion.div
@@ -113,27 +116,30 @@ export default function Index() {
             className="w-px h-8 bg-gradient-to-b from-primary to-transparent"
           />
         </motion.div>
-      </section>
+      </ParallaxHero>
 
-      {/* Services Preview */}
-      <section className="section-padding bg-background">
+      {/* Services Preview with Parallax Cards */}
+      <section className="section-padding bg-background relative">
+        <GoldParticles count={10} className="opacity-50" />
         <div className="container-narrow mx-auto">
           <SectionHeading
             subtitle="What We Do"
             title="Artistry for Every Occasion"
             description="From bridal elegance to bold editorial looks, we craft flawless beauty tailored to your unique skin and style."
           />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StaggerContainer delay={0.2} staggerDelay={0.15}>
             {services.map((service, i) => (
-              <AnimatedSection key={service.title} delay={i * 0.15}>
-                <div className="group p-8 rounded-sm bg-card border border-border hover:border-primary/40 transition-all duration-500 h-full">
-                  <service.icon className="w-8 h-8 text-primary mb-6 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-xl font-serif font-semibold mb-3">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{service.desc}</p>
-                </div>
-              </AnimatedSection>
+              <StaggerItem key={service.title}>
+                <ParallaxCard offset={15} className="h-full">
+                  <div className="group p-8 rounded-sm bg-card border border-border hover:border-primary/40 transition-all duration-500 h-full">
+                    <service.icon className="w-8 h-8 text-primary mb-6 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-xl font-serif font-semibold mb-3">{service.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{service.desc}</p>
+                  </div>
+                </ParallaxCard>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
           <AnimatedSection delay={0.4}>
             <div className="text-center mt-10">
               <Link
@@ -157,7 +163,7 @@ export default function Index() {
           />
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {portfolioItems.map((item, i) => (
-              <AnimatedSection key={item.category} delay={i * 0.1}>
+              <AnimatedSection key={item.category} delay={i * 0.1} animation="fade-up">
                 <Link to="/portfolio" className="group block relative overflow-hidden rounded-sm aspect-[3/4]">
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} group-hover:opacity-60 transition-opacity`} />
                   <div className="absolute inset-0 bg-background/20 group-hover:bg-background/10 transition-colors" />
@@ -189,30 +195,36 @@ export default function Index() {
             subtitle="Client Love"
             title="Words from Our Queens"
           />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StaggerContainer delay={0.2} staggerDelay={0.15}>
             {testimonials.map((t, i) => (
-              <AnimatedSection key={t.name} delay={i * 0.15}>
-                <div className="p-8 rounded-sm bg-card border border-border h-full flex flex-col">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} size={14} className="fill-primary text-primary" />
-                    ))}
+              <StaggerItem key={t.name}>
+                <ParallaxCard offset={10}>
+                  <div className="p-8 rounded-sm bg-card border border-border h-full flex flex-col">
+                    <div className="flex gap-1 mb-4">
+                      {[...Array(5)].map((_, j) => (
+                        <Star key={j} size={14} className="fill-primary text-primary" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed italic flex-1">"{t.quote}"</p>
+                    <div className="mt-6 pt-4 border-t border-border">
+                      <p className="font-serif font-semibold text-foreground">{t.name}</p>
+                      <p className="text-xs text-primary">{t.event}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed italic flex-1">"{t.quote}"</p>
-                  <div className="mt-6 pt-4 border-t border-border">
-                    <p className="font-serif font-semibold text-foreground">{t.name}</p>
-                    <p className="text-xs text-primary">{t.event}</p>
-                  </div>
-                </div>
-              </AnimatedSection>
+                </ParallaxCard>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
+
+      {/* Instagram Feed */}
+      <InstagramFeed />
 
       {/* CTA Banner */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-gold opacity-90" />
+        <GoldParticles count={20} className="opacity-30" />
         <div className="relative z-10 container-narrow mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <AnimatedSection>
             <Heart className="w-8 h-8 text-primary-foreground/60 mx-auto mb-6" />

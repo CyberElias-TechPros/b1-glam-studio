@@ -1,7 +1,9 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { Award, Heart, Users, Palette } from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, GoldDivider } from "@/components/AnimatedSection";
+import { AnimatedSection, SectionHeading, GoldDivider, StaggerContainer, StaggerItem, ParallaxCard } from "@/components/AnimatedSection";
+import { GoldParticles } from "@/components/GoldParticles";
 import heroImage from "@/assets/hero-beauty.jpg";
 
 const values = [
@@ -19,11 +21,25 @@ const stats = [
 ];
 
 export default function About() {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
   return (
     <Layout>
-      {/* Hero */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-secondary" />
+      {/* Hero with Parallax */}
+      <section ref={heroRef} className="relative pt-32 pb-20 overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 bg-secondary"
+          style={{ y }}
+        />
+        <GoldParticles count={20} className="opacity-50" />
+        
         <div className="relative z-10 container-narrow mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -67,6 +83,7 @@ export default function About() {
                 <img
                   src={heroImage}
                   alt="B1touch Artistry founder"
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -80,9 +97,9 @@ export default function About() {
       {/* Stats */}
       <section className="py-16 bg-background border-y border-border">
         <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <StaggerContainer delay={0.1} staggerDelay={0.1}>
             {stats.map((stat, i) => (
-              <AnimatedSection key={stat.label} delay={i * 0.1}>
+              <StaggerItem key={stat.label}>
                 <div className="text-center">
                   <div className="text-3xl sm:text-4xl font-serif font-bold text-gradient-gold mb-2">
                     {stat.value}
@@ -91,9 +108,9 @@ export default function About() {
                     {stat.label}
                   </div>
                 </div>
-              </AnimatedSection>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -106,14 +123,16 @@ export default function About() {
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {values.map((v, i) => (
-              <AnimatedSection key={v.title} delay={i * 0.1}>
-                <div className="flex gap-5 p-6 rounded-sm bg-card border border-border hover:border-primary/30 transition-colors">
-                  <v.icon className="w-6 h-6 text-primary shrink-0 mt-1" />
-                  <div>
-                    <h3 className="font-serif font-semibold text-lg mb-2">{v.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
+              <AnimatedSection key={v.title} delay={i * 0.1} animation="fade-up">
+                <ParallaxCard offset={15}>
+                  <div className="flex gap-5 p-6 rounded-sm bg-card border border-border hover:border-primary/30 transition-colors h-full">
+                    <v.icon className="w-6 h-6 text-primary shrink-0 mt-1" />
+                    <div>
+                      <h3 className="font-serif font-semibold text-lg mb-2">{v.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
+                    </div>
                   </div>
-                </div>
+                </ParallaxCard>
               </AnimatedSection>
             ))}
           </div>
@@ -123,8 +142,9 @@ export default function About() {
       <GoldDivider />
 
       {/* Brand Promise */}
-      <section className="section-padding bg-secondary">
-        <div className="container-narrow mx-auto text-center max-w-3xl">
+      <section className="section-padding bg-secondary relative overflow-hidden">
+        <GoldParticles count={15} className="opacity-30" />
+        <div className="container-narrow mx-auto text-center max-w-3xl relative z-10">
           <AnimatedSection>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-6">
               Our Promise

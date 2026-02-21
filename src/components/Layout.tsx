@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone, Instagram, Facebook, MapPin, Clock, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FloatingInstagramBadge } from "./InstagramFeed";
 
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
   { to: "/services", label: "Services" },
   { to: "/portfolio", label: "Portfolio" },
+  { to: "/blog", label: "Blog" },
   { to: "/testimonials", label: "Testimonials" },
   { to: "/contact", label: "Contact" },
 ];
@@ -249,6 +251,7 @@ export default function Layout({ children }: LayoutProps) {
       <main className="flex-1">{children}</main>
       <Footer />
       <WhatsAppButton />
+      <FloatingInstagramBadge />
     </div>
   );
 }

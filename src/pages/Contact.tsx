@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Phone, Mail, MapPin, Clock, Instagram, Facebook, Send } from "lucide-react";
 import Layout from "@/components/Layout";
 import { AnimatedSection, SectionHeading } from "@/components/AnimatedSection";
+import InstagramFeed from "@/components/InstagramFeed";
 import { useToast } from "@/hooks/use-toast";
 
 const faqs = [
@@ -227,6 +228,9 @@ export default function Contact() {
           </div>
         </div>
       </section>
+
+      {/* Instagram Feed */}
+      <InstagramFeed />
     </Layout>
   );
 }

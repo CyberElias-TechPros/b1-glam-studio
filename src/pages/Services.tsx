@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { Check, ArrowRight, Crown, Sparkles, Camera, PartyPopper, GraduationCap, Clapperboard } from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, GoldDivider } from "@/components/AnimatedSection";
+import { AnimatedSection, SectionHeading, GoldDivider, StaggerContainer, StaggerItem, ParallaxCard } from "@/components/AnimatedSection";
+import { GoldParticles } from "@/components/GoldParticles";
 
 const services = [
   {
@@ -63,12 +66,70 @@ const addons = [
   { name: "Touch-up Artist on Standby", price: "₦20,000" },
 ];
 
+function ServiceCard({ service, index }: { service: typeof services[0]; index: number }) {
+  const cardRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ["start end", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [30, -30]);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      style={{ y }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+    >
+      <div
+        className={`relative p-8 rounded-sm border h-full flex flex-col transition-all duration-300 hover:border-primary/40 ${
+          service.popular
+            ? "bg-card border-primary/30 gold-glow"
+            : "bg-card border-border"
+        }`}
+      >
+        {service.popular && (
+          <div className="absolute -top-3 left-8 px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm">
+            Most Popular
+          </div>
+        )}
+        <service.icon className="w-7 h-7 text-primary mb-4" />
+        <h3 className="text-xl font-serif font-semibold mb-1">{service.title}</h3>
+        <div className="text-lg font-sans font-bold text-primary mb-3">{service.price}</div>
+        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
+        <ul className="space-y-2 mb-8 flex-1">
+          {service.features.map((f) => (
+            <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Check size={14} className="text-primary mt-0.5 shrink-0" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        <Link
+          to="/booking"
+          className={`block text-center py-3 text-sm font-sans font-semibold tracking-wide rounded-sm transition-all ${
+            service.popular
+              ? "bg-gradient-gold text-primary-foreground hover:opacity-90"
+              : "border border-primary/40 text-primary hover:bg-primary/10"
+          }`}
+        >
+          Book This Service
+        </Link>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Services() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="pt-32 pb-16 bg-secondary">
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="pt-32 pb-16 bg-secondary relative overflow-hidden">
+        <GoldParticles count={15} className="opacity-50" />
+        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <AnimatedSection>
             <span className="text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-4 block">
               Services & Pricing
@@ -87,53 +148,20 @@ export default function Services() {
       {/* Services Grid */}
       <section className="section-padding bg-background">
         <div className="container-narrow mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <StaggerContainer delay={0.1} staggerDelay={0.1}>
             {services.map((service, i) => (
-              <AnimatedSection key={service.title} delay={i * 0.1}>
-                <div
-                  className={`relative p-8 rounded-sm border h-full flex flex-col transition-all duration-300 hover:border-primary/40 ${
-                    service.popular
-                      ? "bg-card border-primary/30 gold-glow"
-                      : "bg-card border-border"
-                  }`}
-                >
-                  {service.popular && (
-                    <div className="absolute -top-3 left-8 px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm">
-                      Most Popular
-                    </div>
-                  )}
-                  <service.icon className="w-7 h-7 text-primary mb-4" />
-                  <h3 className="text-xl font-serif font-semibold mb-1">{service.title}</h3>
-                  <div className="text-lg font-sans font-bold text-primary mb-3">{service.price}</div>
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
-                  <ul className="space-y-2 mb-8 flex-1">
-                    {service.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <Check size={14} className="text-primary mt-0.5 shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    to="/booking"
-                    className={`block text-center py-3 text-sm font-sans font-semibold tracking-wide rounded-sm transition-all ${
-                      service.popular
-                        ? "bg-gradient-gold text-primary-foreground hover:opacity-90"
-                        : "border border-primary/40 text-primary hover:bg-primary/10"
-                    }`}
-                  >
-                    Book This Service
-                  </Link>
-                </div>
-              </AnimatedSection>
+              <StaggerItem key={service.title}>
+                <ServiceCard service={service} index={i} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* Add-ons */}
-      <section className="section-padding bg-secondary">
-        <div className="container-narrow mx-auto">
+      <section className="section-padding bg-secondary relative overflow-hidden">
+        <GoldParticles count={10} className="opacity-30" />
+        <div className="container-narrow mx-auto relative z-10">
           <SectionHeading
             subtitle="Extras"
             title="Add-On Services"
@@ -142,7 +170,7 @@ export default function Services() {
           <div className="max-w-2xl mx-auto">
             <div className="bg-card rounded-sm border border-border overflow-hidden">
               {addons.map((addon, i) => (
-                <AnimatedSection key={addon.name} delay={i * 0.05}>
+                <AnimatedSection key={addon.name} delay={i * 0.05} animation="slide-left">
                   <div className={`flex items-center justify-between p-4 ${i !== addons.length - 1 ? "border-b border-border" : ""}`}>
                     <span className="text-sm text-foreground">{addon.name}</span>
                     <span className="text-sm font-semibold text-primary">{addon.price}</span>
