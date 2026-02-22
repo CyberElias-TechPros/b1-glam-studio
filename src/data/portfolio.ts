@@ -397,7 +397,7 @@ export const videoContent: VideoContent[] = [
   },
 ];
 
-export const categories: PortfolioCategory[] = [
+export const categories: (PortfolioCategory | "All")[] = [
   "All",
   "Bridal",
   "Owambe/Events",

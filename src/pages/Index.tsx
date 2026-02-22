@@ -7,6 +7,7 @@ import { AnimatedSection, SectionHeading, GoldDivider, ParallaxCard, StaggerCont
 import { ParallaxHero } from "@/components/ParallaxHero";
 import { GoldParticles } from "@/components/GoldParticles";
 import { InstagramFeed } from "@/components/InstagramFeed";
+import { getImages } from "@/lib/portfolioImages";
 import heroImage from "@/assets/hero-beauty.jpg";
 
 const services = [
@@ -15,13 +16,14 @@ const services = [
   { icon: Camera, title: "Editorial & Studio", desc: "Camera-ready perfection for photoshoots, campaigns & content creation." },
 ];
 
+const portfolioImages = getImages(6, 100);
 const portfolioItems = [
-  { category: "Bridal", gradient: "from-amber-900/60 via-yellow-800/40 to-yellow-700/20" },
-  { category: "Event Glam", gradient: "from-amber-800/60 via-orange-700/40 to-yellow-600/20" },
-  { category: "Editorial", gradient: "from-yellow-900/60 via-amber-800/40 to-orange-700/20" },
-  { category: "Dark Skin", gradient: "from-amber-700/60 via-yellow-600/40 to-orange-500/20" },
-  { category: "Bold Look", gradient: "from-yellow-800/60 via-amber-700/40 to-orange-600/20" },
-  { category: "Soft Glam", gradient: "from-amber-600/60 via-yellow-500/40 to-orange-400/20" },
+  { category: "Bridal", gradient: "from-amber-900/60 via-yellow-800/40 to-yellow-700/20", image: portfolioImages[0] },
+  { category: "Event Glam", gradient: "from-amber-800/60 via-orange-700/40 to-yellow-600/20", image: portfolioImages[1] },
+  { category: "Editorial", gradient: "from-yellow-900/60 via-amber-800/40 to-orange-700/20", image: portfolioImages[2] },
+  { category: "Dark Skin", gradient: "from-amber-700/60 via-yellow-600/40 to-orange-500/20", image: portfolioImages[3] },
+  { category: "Bold Look", gradient: "from-yellow-800/60 via-amber-700/40 to-orange-600/20", image: portfolioImages[4] },
+  { category: "Soft Glam", gradient: "from-amber-600/60 via-yellow-500/40 to-orange-400/20", image: portfolioImages[5] },
 ];
 
 const testimonials = [
@@ -165,9 +167,9 @@ export default function Index() {
             {portfolioItems.map((item, i) => (
               <AnimatedSection key={item.category} delay={i * 0.1} animation="fade-up">
                 <Link to="/portfolio" className="group block relative overflow-hidden rounded-sm aspect-[3/4]">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} group-hover:opacity-60 transition-opacity`} />
-                  <div className="absolute inset-0 bg-background/20 group-hover:bg-background/10 transition-colors" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/80 to-transparent">
+                  <img src={item.image} alt={item.category} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} group-hover:opacity-40 transition-opacity`} />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                     <span className="text-sm font-serif text-foreground">{item.category}</span>
                   </div>
                   <div className="absolute inset-0 border border-transparent group-hover:border-primary/30 rounded-sm transition-colors" />
