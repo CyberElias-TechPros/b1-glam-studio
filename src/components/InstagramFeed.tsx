@@ -1,82 +1,30 @@
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, Send, Instagram as InstagramIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getImages } from "@/lib/portfolioImages";
 
-// Placeholder images representing makeup/beauty content for dark skin tones
-const instagramPosts = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=400&fit=crop",
-    likes: 2847,
-    comments: 156,
-    caption: "Flawless finish for melanin skin ✨",
-    type: "image"
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&h=400&fit=crop",
-    likes: 3156,
-    comments: 203,
-    caption: "Bridal glam done right 👰🏾",
-    type: "image"
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop",
-    likes: 1987,
-    comments: 89,
-    caption: "Soft glam for the weekend",
-    type: "image"
-  },
-  {
-    id: 4,
-    image: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&h=400&fit=crop",
-    likes: 4102,
-    comments: 287,
-    caption: "Bold and beautiful 💋",
-    type: "image"
-  },
-  {
-    id: 5,
-    image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&h=400&fit=crop",
-    likes: 2567,
-    comments: 134,
-    caption: "Glow up season is here ✨",
-    type: "image"
-  },
-  {
-    id: 6,
-    image: "https://images.unsplash.com/photo-1526045478516-99145907023c?w=400&h=400&fit=crop",
-    likes: 3421,
-    comments: 198,
-    caption: "Every shade is beautiful",
-    type: "image"
-  },
-  {
-    id: 7,
-    image: "https://images.unsplash.com/photo-1560579183-b5e2c12d5b1d?w=400&h=400&fit=crop",
-    likes: 1923,
-    comments: 112,
-    caption: "Editorial vibes 🎬",
-    type: "image"
-  },
-  {
-    id: 8,
-    image: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=400&h=400&fit=crop",
-    likes: 2890,
-    comments: 167,
-    caption: "Natural beauty enhanced",
-    type: "image"
-  },
-  {
-    id: 9,
-    image: "https://images.unsplash.com/photo-1503236823255-94357598c9d3?w=400&h=400&fit=crop",
-    likes: 3654,
-    comments: 234,
-    caption: "When the glow hits different 💫",
-    type: "image"
-  }
+// Use real images from portfolio folder, randomized
+const feedImages = getImages(9, 50);
+const captions = [
+  "Flawless finish for melanin skin ✨",
+  "Bridal glam done right 👰🏾",
+  "Soft glam for the weekend",
+  "Bold and beautiful 💋",
+  "Glow up season is here ✨",
+  "Every shade is beautiful",
+  "Editorial vibes 🎬",
+  "Natural beauty enhanced",
+  "When the glow hits different 💫",
 ];
+
+const instagramPosts = feedImages.map((img, i) => ({
+  id: i + 1,
+  image: img,
+  likes: 1500 + Math.floor(Math.random() * 3000),
+  comments: 50 + Math.floor(Math.random() * 250),
+  caption: captions[i],
+  type: "image" as const,
+}));
 
 function InstagramPost({ post, index }: { post: typeof instagramPosts[0]; index: number }) {
   return (

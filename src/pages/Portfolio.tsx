@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import { AnimatedSection, SectionHeading, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
 import { GoldParticles } from "@/components/GoldParticles";
 import { portfolioItems, videoContent, categories, videoCategories, type PortfolioItem, type VideoContent, type PortfolioCategory } from "@/data/portfolio";
+import { getImage } from "@/lib/portfolioImages";
 
 // Dialog component (simplified version)
 function Dialog({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
@@ -103,6 +104,7 @@ function PortfolioCard({
   index: number;
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const imageSrc = getImage(item.id);
 
   return (
     <motion.div
@@ -114,18 +116,16 @@ function PortfolioCard({
       className="group relative overflow-hidden rounded-sm cursor-pointer"
       onClick={onClick}
     >
-      {/* Gradient Background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient}`}>
-        {/* Animated shimmer effect */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-        </div>
-        
-        {/* Pattern overlay */}
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0)`,
-          backgroundSize: '20px 20px'
-        }} />
+      {/* Real Image */}
+      <div className="absolute inset-0">
+        <img
+          src={imageSrc}
+          alt={item.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          loading="lazy"
+          onLoad={() => setIsLoaded(true)}
+        />
+        <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-20`} />
       </div>
 
       {/* Video indicator */}
@@ -255,7 +255,12 @@ function LightboxModal({
         className="bg-background rounded-sm max-w-4xl w-full overflow-hidden"
       >
         {/* Image/Video Area */}
-        <div className={`relative ${item.heightClass} bg-gradient-to-br ${item.gradient}`}>
+        <div className={`relative aspect-[4/3] bg-gradient-to-br ${item.gradient}`}>
+          <img
+            src={getImage(item.id)}
+            alt={item.title}
+            className="w-full h-full object-cover"
+          />
           {item.isVideo && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30">
               <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
