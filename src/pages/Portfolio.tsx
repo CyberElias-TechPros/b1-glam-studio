@@ -1,638 +1,266 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { X, Play, ChevronLeft, ChevronRight, Instagram, ExternalLink, Sparkles, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  X, ChevronLeft, ChevronRight, Instagram, 
+  Sparkles, ZoomIn, Heart, ArrowLeft, ArrowRight
+} from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
+import { AnimatedSection, SectionHeading } from "@/components/AnimatedSection";
 import { GoldParticles } from "@/components/GoldParticles";
-import { portfolioItems, videoContent, categories, videoCategories, type PortfolioItem, type VideoContent, type PortfolioCategory } from "@/data/portfolio";
-import { getImage } from "@/lib/portfolioImages";
+import { shuffledImages, getImages } from "@/lib/portfolioImages";
 
-// Dialog component (simplified version)
-function Dialog({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
-  if (!open) return null;
+const IMAGES_PER_PAGE = 24;
+const CAROUSEL_COUNT = 8;
+
+const CATEGORIES = ["All", "Bridal", "Owambe / Events", "Editorial", "Dark Skin", "Bold / Afrocentric", "Soft Glam"] as const;
+type GalleryCategory = (typeof CATEGORIES)[number];
+
+function getCategoryForIndex(index: number): GalleryCategory {
+  const cats: GalleryCategory[] = ["Bridal", "Owambe / Events", "Editorial", "Dark Skin", "Bold / Afrocentric", "Soft Glam"];
+  return cats[(index * 7 + 3) % cats.length];
+}
+
+// ─── Featured Carousel ────────────────────────────────────
+function FeaturedCarousel() {
+  const [current, setCurrent] = useState(0);
+  const featuredImages = useMemo(() => getImages(CAROUSEL_COUNT, 0), []);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const [paused, setPaused] = useState(false);
+
+  const next = useCallback(() => setCurrent((c) => (c + 1) % CAROUSEL_COUNT), []);
+  const prev = useCallback(() => setCurrent((c) => (c - 1 + CAROUSEL_COUNT) % CAROUSEL_COUNT), []);
+
+  useEffect(() => {
+    if (paused) return;
+    intervalRef.current = setInterval(next, 4000);
+    return () => clearInterval(intervalRef.current);
+  }, [paused, next]);
+
+  const manual = (fn: () => void) => { setPaused(true); fn(); setTimeout(() => setPaused(false), 8000); };
+
+  const captions = ["Traditional Bridal Glam", "Owambe Queen", "Editorial Perfection", "Melanin Magic", "Soft Glow Beauty", "Bold Afrocentric", "Luxury Bridal", "Dark Skin Radiance"];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 max-h-[90vh] max-w-[90vw] overflow-auto">{children}</div>
+    <div className="relative w-full overflow-hidden rounded-sm group" style={{ height: 420 }}>
+      <AnimatePresence mode="wait">
+        <motion.img key={current} src={featuredImages[current]} alt={captions[current]}
+          initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="absolute inset-0 w-full h-full object-cover" />
+      </AnimatePresence>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute bottom-6 left-6 z-10">
+        <span className="text-[10px] font-sans font-semibold uppercase tracking-[0.3em] text-primary mb-1 block">Featured Look</span>
+        <h3 className="text-xl sm:text-2xl font-serif font-bold text-white">{captions[current]}</h3>
+      </div>
+      <button onClick={() => manual(prev)} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><ChevronLeft className="w-5 h-5" /></button>
+      <button onClick={() => manual(next)} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><ChevronRight className="w-5 h-5" /></button>
+      <div className="absolute bottom-4 right-6 flex gap-1.5 z-10">
+        {featuredImages.map((_, i) => (
+          <button key={i} onClick={() => manual(() => setCurrent(i))}
+            className={`h-1.5 rounded-full transition-all ${i === current ? "w-6 bg-primary" : "w-1.5 bg-white/50"}`} />
+        ))}
+      </div>
     </div>
   );
 }
 
-// Before/After Slider Component
+// ─── Before/After Slider ──────────────────────────────────
 function BeforeAfterSlider() {
-  const [position, setPosition] = useState(50);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
+  const [pos, setPos] = useState(50);
+  const ref = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const beforeImg = useMemo(() => getImages(1, 50)[0], []);
+  const afterImg = useMemo(() => getImages(1, 51)[0], []);
 
-  const handleMove = (clientX: number) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    setPosition(percentage);
+  const move = (clientX: number) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    setPos(Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100)));
   };
 
   return (
-    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm">
-      {/* Before Image */}
-      <div className="absolute inset-0 bg-gradient-to-br from-stone-950 to-stone-900">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center p-8">
-            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-stone-800 flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-stone-500" />
-            </div>
-            <p className="text-stone-400 font-serif text-lg">Before</p>
-          </div>
+    <div ref={ref} className="relative w-full overflow-hidden rounded-sm cursor-ew-resize select-none" style={{ height: 400 }}
+      onMouseDown={() => (dragging.current = true)} onMouseMove={(e) => dragging.current && move(e.clientX)}
+      onMouseUp={() => (dragging.current = false)} onMouseLeave={() => (dragging.current = false)}
+      onTouchStart={() => (dragging.current = true)} onTouchMove={(e) => move(e.touches[0].clientX)} onTouchEnd={() => (dragging.current = false)}>
+      <img src={beforeImg} alt="Before" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+        <img src={afterImg} alt="After" className="absolute inset-0 w-full h-full object-cover" />
+      </div>
+      <div className="absolute top-0 bottom-0 w-0.5 bg-white z-10" style={{ left: `${pos}%`, transform: "translateX(-50%)" }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center">
+          <ArrowLeft className="w-3 h-3 text-foreground absolute left-1.5" /><ArrowRight className="w-3 h-3 text-foreground absolute right-1.5" />
         </div>
       </div>
-
-      {/* After Image (clipped) */}
-      <div 
-        className="absolute inset-0 overflow-hidden"
-        style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-yellow-800 to-orange-700">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center p-8">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-amber-600/30 flex items-center justify-center">
-                <Sparkles className="w-10 h-10 text-amber-400" />
-              </div>
-              <p className="text-amber-200 font-serif text-lg">After</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Slider Handle */}
-      <div 
-        ref={containerRef}
-        className="absolute inset-0 cursor-ew-resize"
-        onMouseDown={() => isDragging.current = true}
-        onMouseMove={(e) => isDragging.current && handleMove(e.clientX)}
-        onMouseUp={() => isDragging.current = false}
-        onMouseLeave={() => isDragging.current = false}
-        onTouchStart={() => isDragging.current = true}
-        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-        onTouchEnd={() => isDragging.current = false}
-      >
-        <div 
-          className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize"
-          style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-        >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center">
-            <ChevronLeft className="w-4 h-4 text-amber-700 absolute left-1" />
-            <ChevronRight className="w-4 h-4 text-amber-700 absolute right-1" />
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded text-xs text-white">Before</div>
-      <div className="absolute bottom-4 right-4 bg-amber-600/80 px-3 py-1 rounded text-xs text-white">After</div>
+      <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-sm text-xs text-white font-sans uppercase tracking-wider">Before</div>
+      <div className="absolute bottom-3 right-3 bg-primary/80 px-3 py-1 rounded-sm text-xs text-white font-sans uppercase tracking-wider">After</div>
     </div>
   );
 }
 
-// Portfolio Card Component
-function PortfolioCard({ 
-  item, 
-  onClick,
-  index 
-}: { 
-  item: PortfolioItem; 
-  onClick: () => void;
-  index: number;
-}) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const imageSrc = getImage(item.id);
+// ─── Lightbox ─────────────────────────────────────────────
+function Lightbox({ images, currentIndex, onClose, onNavigate }: { images: string[]; currentIndex: number; onClose: () => void; onNavigate: (i: number) => void }) {
+  const [liked, setLiked] = useState(false);
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") onNavigate((currentIndex + 1) % images.length);
+      if (e.key === "ArrowLeft") onNavigate((currentIndex - 1 + images.length) % images.length);
+    };
+    document.addEventListener("keydown", h);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
+  }, [currentIndex, images.length, onClose, onNavigate]);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="group relative overflow-hidden rounded-sm cursor-pointer"
-      onClick={onClick}
-    >
-      {/* Real Image */}
-      <div className="absolute inset-0">
-        <img
-          src={imageSrc}
-          alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
-          onLoad={() => setIsLoaded(true)}
-        />
-        <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-20`} />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4">
+        <span className="text-sm text-white/70">{currentIndex + 1} / {images.length}</span>
+        <div className="flex gap-3">
+          <button onClick={() => setLiked(!liked)} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+            <Heart className={`w-4 h-4 ${liked ? "text-red-500 fill-red-500" : "text-white"}`} />
+          </button>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
       </div>
-
-      {/* Video indicator */}
-      {item.isVideo && (
-        <div className="absolute top-3 right-3 z-20">
-          <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-            <Play className="w-4 h-4 text-white fill-white" />
-          </div>
+      <AnimatePresence mode="wait">
+        <motion.img key={currentIndex} src={images[currentIndex]} alt="" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
+          className="relative z-10 max-h-[80vh] max-w-[90vw] object-contain rounded-sm" />
+      </AnimatePresence>
+      <button onClick={() => onNavigate((currentIndex - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20"><ChevronLeft className="w-6 h-6 text-white" /></button>
+      <button onClick={() => onNavigate((currentIndex + 1) % images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20"><ChevronRight className="w-6 h-6 text-white" /></button>
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-sans font-semibold uppercase tracking-widest text-primary">{getCategoryForIndex(currentIndex)}</span>
+          <Link to="/booking" onClick={onClose} className="px-5 py-2 text-xs font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm">Book This Look</Link>
         </div>
-      )}
-
-      {/* Featured badge */}
-      {item.featured && (
-        <div className="absolute top-3 left-3 z-20">
-          <span className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm">
-            Featured
-          </span>
+        <div className="flex gap-1.5 overflow-x-auto pb-2 justify-center">
+          {images.slice(Math.max(0, currentIndex - 4), Math.min(images.length, currentIndex + 5)).map((img, i) => {
+            const ri = Math.max(0, currentIndex - 4) + i;
+            return <button key={ri} onClick={() => onNavigate(ri)} className={`flex-shrink-0 w-12 h-12 rounded-sm overflow-hidden transition-all ${ri === currentIndex ? "ring-2 ring-primary scale-110" : "opacity-50 hover:opacity-80"}`}><img src={img} alt="" className="w-full h-full object-cover" /></button>;
+          })}
         </div>
-      )}
-
-      {/* Loading state */}
-      {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/20">
-          <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
-        </div>
-      )}
-
-      {/* Hover Overlay */}
-      <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-        <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-primary mb-1">
-          {item.category}
-        </span>
-        <h3 className="text-sm font-serif font-semibold text-white mb-1 line-clamp-1">
-          {item.title}
-        </h3>
-        <p className="text-xs text-white/70 line-clamp-2 mb-3">{item.description}</p>
-        
-        {/* Book This Look CTA */}
-        <Link
-          to="/booking"
-          className="inline-flex items-center justify-center gap-2 w-full py-2 text-xs font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Book This Look
-        </Link>
       </div>
-
-      {/* Border effect */}
-      <div className="absolute inset-0 border border-transparent group-hover:border-primary/50 rounded-sm transition-colors duration-300" />
     </motion.div>
   );
 }
 
-// Video Thumbnail Card
-function VideoThumbnailCard({ 
-  video, 
-  onClick,
-  index 
-}: { 
-  video: VideoContent; 
-  onClick: () => void;
-  index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="group relative overflow-hidden rounded-sm cursor-pointer aspect-video"
-      onClick={onClick}
-    >
-      <div className={`absolute inset-0 bg-gradient-to-br ${video.gradient}`} />
-      
-      {/* Play button overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-colors">
-        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
-          <Play className="w-6 h-6 text-white fill-white ml-1" />
-        </div>
-      </div>
-
-      {/* Duration badge */}
-      <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 text-white text-xs font-medium rounded">
-        {video.duration}
-      </div>
-
-      {/* Category badge */}
-      <div className="absolute top-3 left-3 px-2 py-1 bg-black/60 text-white text-xs font-medium rounded">
-        {video.category}
-      </div>
-
-      {/* Info overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-        <h4 className="text-sm font-semibold text-white line-clamp-1">{video.title}</h4>
-        <p className="text-xs text-white/70">{video.views} views</p>
-      </div>
-
-      {/* Gold accent border */}
-      <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/50 rounded-sm transition-colors duration-300" />
-    </motion.div>
-  );
-}
-
-// Lightbox Modal
-function LightboxModal({ 
-  item, 
-  onClose 
-}: { 
-  item: PortfolioItem | null; 
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
-
-  if (!item) return null;
-
-  return (
-    <Dialog open={!!item} onClose={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-background rounded-sm max-w-4xl w-full overflow-hidden"
-      >
-        {/* Image/Video Area */}
-        <div className={`relative aspect-[4/3] bg-gradient-to-br ${item.gradient}`}>
-          <img
-            src={getImage(item.id)}
-            alt={item.title}
-            className="w-full h-full object-cover"
-          />
-          {item.isVideo && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Play className="w-8 h-8 text-white fill-white ml-1" />
-              </div>
-            </div>
-          )}
-          
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-        </div>
-
-        {/* Details */}
-        <div className="p-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div>
-              <span className="text-xs font-sans font-semibold uppercase tracking-widest text-primary">
-                {item.category}
-              </span>
-              <h3 className="text-xl font-serif font-bold text-foreground mt-1">{item.title}</h3>
-            </div>
-            {item.isVideo && item.duration && (
-              <span className="px-3 py-1 bg-secondary text-sm text-muted-foreground rounded-sm">
-                {item.duration}
-              </span>
-            )}
-          </div>
-          
-          <p className="text-muted-foreground mb-6">{item.description}</p>
-
-          <div className="flex gap-3">
-            <Link
-              to="/booking"
-              className="flex-1 inline-flex items-center justify-center gap-2 py-3 text-sm font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm"
-              onClick={onClose}
-            >
-              Book This Look
-            </Link>
-            {item.instagramUrl && (
-              <a
-                href={`https://instagram.com/b1touchartistry`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-3 border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    </Dialog>
-  );
-}
-
-// Video Section Modal
-function VideoSectionModal({ 
-  video, 
-  onClose 
-}: { 
-  video: VideoContent | null; 
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
-
-  if (!video) return null;
-
-  return (
-    <Dialog open={!!video} onClose={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-background rounded-sm max-w-4xl w-full overflow-hidden"
-      >
-        {/* Video placeholder */}
-        <div className={`relative aspect-video bg-gradient-to-br ${video.gradient}`}>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Play className="w-10 h-10 text-white fill-white ml-1" />
-            </div>
-          </div>
-          
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-
-          {/* Duration */}
-          <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/60 text-white text-sm font-medium rounded">
-            {video.duration}
-          </div>
-        </div>
-
-        {/* Details */}
-        <div className="p-6">
-          <span className="text-xs font-sans font-semibold uppercase tracking-widest text-primary">
-            {video.category}
-          </span>
-          <h3 className="text-xl font-serif font-bold text-foreground mt-1">{video.title}</h3>
-          <p className="text-muted-foreground mt-2">{video.views} views</p>
-
-          <div className="flex gap-3 mt-6">
-            <a
-              href={`https://instagram.com/b1touchartistry`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm"
-            >
-              <Instagram className="w-4 h-4" />
-              Watch on Instagram
-            </a>
-          </div>
-        </div>
-      </motion.div>
-    </Dialog>
-  );
-}
-
+// ─── Main Page ────────────────────────────────────────────
 export default function Portfolio() {
-  const [activeCategory, setActiveCategory] = useState<PortfolioCategory | "All">("All");
-  const [activeVideoCategory, setActiveVideoCategory] = useState<string>("All");
-  const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<VideoContent | null>(null);
-  const [showBeforeAfter, setShowBeforeAfter] = useState(false);
+  const [category, setCategory] = useState<GalleryCategory>("All");
+  const [count, setCount] = useState(IMAGES_PER_PAGE);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
-  // Filter portfolio items
-  const filteredItems = activeCategory === "All" 
-    ? portfolioItems 
-    : portfolioItems.filter((item) => item.category === activeCategory);
+  const all = useMemo(() => shuffledImages.map((src, i) => ({ src, cat: getCategoryForIndex(i), i })), []);
+  const filtered = useMemo(() => category === "All" ? all : all.filter((x) => x.cat === category), [category, all]);
+  const visible = filtered.slice(0, count);
 
-  // Filter videos
-  const filteredVideos = activeVideoCategory === "All"
-    ? videoContent
-    : videoContent.filter((video) => video.category === activeVideoCategory);
+  useEffect(() => setCount(IMAGES_PER_PAGE), [category]);
+
+  const lbImages = useMemo(() => filtered.map((x) => x.src), [filtered]);
 
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-secondary relative overflow-hidden">
+      {/* Hero */}
+      <section className="pt-32 pb-12 bg-secondary relative overflow-hidden">
         <GoldParticles count={20} className="opacity-50" />
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div className="max-w-6xl mx-auto px-4 text-center relative z-10">
           <AnimatedSection>
-            <span className="text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-4 block">
-              Portfolio
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold mb-4">
-              The <span className="text-gradient-gold">B1touch</span> Gallery
-            </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-              Every transformation is a work of art. Browse our portfolio to find your inspiration.
-            </p>
+            <span className="text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-4 block">Portfolio</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold mb-4">The <span className="text-gradient-gold">B1touch</span> Gallery</h1>
+            <p className="text-muted-foreground max-w-xl mx-auto text-lg">Over {shuffledImages.length} transformations showcasing the art of flawless beauty.</p>
           </AnimatedSection>
         </div>
       </section>
 
-      {/* Filter Tabs */}
-      <section className="py-6 bg-background border-b border-border sticky top-20 z-30 backdrop-blur-md bg-background/95">
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Featured Carousel */}
+      <section className="py-10 bg-background">
+        <div className="max-w-6xl mx-auto px-4">
+          <SectionHeading subtitle="Featured" title="Spotlight Looks" description="Our most stunning transformations, hand-picked for you" />
+          <FeaturedCarousel />
+        </div>
+      </section>
+
+      {/* Before / After */}
+      <section className="py-12 bg-secondary">
+        <div className="max-w-3xl mx-auto px-4">
+          <SectionHeading subtitle="Transformation" title="Before & After" description="Drag the slider to reveal the B1touch magic" />
+          <BeforeAfterSlider />
+        </div>
+      </section>
+
+      {/* Filters */}
+      <section className="py-4 bg-background border-b border-border sticky top-20 z-30 backdrop-blur-md bg-background/95">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 text-xs font-sans font-medium uppercase tracking-wider rounded-sm transition-all ${
-                  activeCategory === cat
-                    ? "bg-gradient-gold text-primary-foreground"
-                    : "text-muted-foreground hover:text-primary border border-border hover:border-primary/40"
-                }`}
-              >
-                {cat}
+            {CATEGORIES.map((c) => (
+              <button key={c} onClick={() => setCategory(c)}
+                className={`px-3 py-1.5 text-[10px] sm:text-xs font-sans font-medium uppercase tracking-wider rounded-sm transition-all ${category === c ? "bg-gradient-gold text-primary-foreground" : "text-muted-foreground hover:text-primary border border-border hover:border-primary/40"}`}>
+                {c}{c !== "All" && <span className="ml-1 text-[9px] opacity-70">({all.filter((x) => x.cat === c).length})</span>}
               </button>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground mt-2 text-center">Showing {Math.min(count, filtered.length)} of {filtered.length} looks</p>
         </div>
       </section>
 
-      {/* Before/After Preview */}
-      <section className="py-12 bg-background">
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-serif font-bold mb-2">Transformation Preview</h2>
-              <p className="text-muted-foreground">Drag the slider to see the B1touch magic</p>
-            </div>
-            <div className="max-w-2xl mx-auto">
-              <BeforeAfterSlider />
-            </div>
-            <div className="text-center mt-6">
-              <button
-                onClick={() => setShowBeforeAfter(!showBeforeAfter)}
-                className="text-sm text-primary hover:underline"
-              >
-                {showBeforeAfter ? 'Hide' : 'Show'} Before/After Slider
+      {/* Gallery Grid — using explicit height, no aspect-ratio tricks */}
+      <section className="py-16 bg-background">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {visible.map((img, idx) => (
+              <div key={img.i} onClick={() => setLightbox(idx)}
+                className="group relative overflow-hidden rounded-sm cursor-pointer bg-secondary h-[280px] sm:h-[320px] lg:h-[360px]">
+                <img src={img.src} alt={`B1touch look ${img.i + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3">
+                  <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-primary">{img.cat}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <ZoomIn className="w-4 h-4 text-white/80" />
+                    <span className="text-xs text-white/80">View</span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 border border-transparent group-hover:border-primary/40 rounded-sm transition-colors duration-300 pointer-events-none" />
+              </div>
+            ))}
+          </div>
+
+          {count < filtered.length && (
+            <div className="text-center mt-10">
+              <button onClick={() => setCount((c) => c + IMAGES_PER_PAGE)}
+                className="inline-flex items-center gap-2 px-8 py-3 text-sm font-sans font-semibold uppercase tracking-wider border-2 border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground transition-all rounded-sm">
+                <Sparkles className="w-4 h-4" />Load More ({filtered.length - count} remaining)
               </button>
             </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* Gallery Grid - Masonry Style */}
-      <section className="section-padding bg-background">
-        <div className="container-narrow mx-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="columns-2 md:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4"
-            >
-              {filteredItems.map((item, index) => (
-                <div key={item.id} className="break-inside-avoid">
-                  <PortfolioCard 
-                    item={item} 
-                    onClick={() => setSelectedItem(item)}
-                    index={index}
-                  />
-                </div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Empty state */}
-          {filteredItems.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">No items found in this category.</p>
-            </div>
           )}
-
-          {/* Note */}
-          <div className="text-center mt-12">
-            <p className="text-sm text-muted-foreground mb-6">
-              Want to see more? Follow us on Instagram for daily transformations.
-            </p>
-            <a
-              href="https://instagram.com/b1touchartistry"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-sans font-medium border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm"
-            >
-              <Instagram className="w-4 h-4" />
-              Follow @b1touchartistry
-            </a>
-          </div>
         </div>
       </section>
 
-      {/* Video Content Section */}
-      <section className="section-padding bg-secondary relative overflow-hidden">
-        <GoldParticles count={15} className="opacity-30" />
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <AnimatedSection>
-            <div className="text-center mb-10">
-              <span className="text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-2 block">
-                Video Content
-              </span>
-              <h2 className="text-3xl font-serif font-bold mb-4">
-                Transformations & <span className="text-gradient-gold">Tutorials</span>
-              </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Watch full transformations, tutorials, and behind-the-scenes content
-              </p>
-            </div>
-
-            {/* Video Category Filter */}
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {videoCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveVideoCategory(cat)}
-                  className={`px-4 py-2 text-xs font-sans font-medium uppercase tracking-wider rounded-sm transition-all ${
-                    activeVideoCategory === cat
-                      ? "bg-gradient-gold text-primary-foreground"
-                      : "text-muted-foreground hover:text-primary border border-border hover:border-primary/40"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {/* Video Grid */}
-            <motion.div 
-              key={activeVideoCategory}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {filteredVideos.map((video, index) => (
-                <VideoThumbnailCard
-                  key={video.id}
-                  video={video}
-                  onClick={() => setSelectedVideo(video)}
-                  index={index}
-                />
-              ))}
-            </motion.div>
-
-            {/* Instagram Reels CTA */}
-            <div className="text-center mt-10">
-              <a
-                href="https://instagram.com/b1touchartistry"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-sans font-medium bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white hover:opacity-90 transition-all rounded-sm"
-              >
-                <Play className="w-4 h-4 fill-white" />
-                Watch More Reels
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* Book CTA */}
-      <section className="py-16 bg-background relative overflow-hidden">
-        <GoldParticles count={10} className="opacity-30" />
-        <div className="container-narrow mx-auto px-4 text-center relative z-10">
+      {/* CTA */}
+      <section className="py-16 bg-secondary relative overflow-hidden">
+        <GoldParticles count={12} className="opacity-30" />
+        <div className="max-w-6xl mx-auto px-4 text-center relative z-10">
           <AnimatedSection>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-4">Love What You See?</h2>
-            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-              Book a session with B1touch Artistry and let us create your perfect look. 
-              Specializing in stunning transformations for all skin tones.
-            </p>
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">Book a session with B1touch Artistry and let us create your perfect look.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/booking"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm"
-              >
-                Book Your Session
-              </Link>
-              <a
-                href="https://instagram.com/b1touchartistry"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-medium border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm"
-              >
-                <Instagram className="w-5 h-5" />
-                View Instagram
+              <Link to="/booking" className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm">Book Your Session</Link>
+              <a href="https://instagram.com/b1touch_artistry" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-medium border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm">
+                <Instagram className="w-5 h-5" />Follow @b1touch_artistry
               </a>
             </div>
           </AnimatedSection>
         </div>
       </section>
 
-      {/* Lightbox Modal */}
+      {/* Lightbox */}
       <AnimatePresence>
-        {selectedItem && (
-          <LightboxModal item={selectedItem} onClose={() => setSelectedItem(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Video Section Modal */}
-      <AnimatePresence>
-        {selectedVideo && (
-          <VideoSectionModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />
-        )}
+        {lightbox !== null && <Lightbox images={lbImages} currentIndex={lightbox} onClose={() => setLightbox(null)} onNavigate={setLightbox} />}
       </AnimatePresence>
     </Layout>
   );
