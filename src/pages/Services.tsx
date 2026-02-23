@@ -11,7 +11,7 @@ const services = [
   {
     icon: Crown,
     title: "Bridal Makeup",
-    price: "From ₦45,000",
+    price: "From ₦225,000",
     description: "Your perfect wedding look, designed to last from ceremony to reception. Includes a trial session.",
     features: ["Pre-wedding consultation", "Trial session included", "Long-lasting HD finish", "Touch-up kit provided", "Lash application included"],
     popular: true,
@@ -19,7 +19,7 @@ const services = [
   {
     icon: Sparkles,
     title: "Owambe / Event Glam",
-    price: "From ₦20,000",
+    price: "From ₦100,000",
     description: "Head-turning looks for Lagos parties, aso-ebi celebrations, and special occasions.",
     features: ["Full face glam", "Lash application", "Setting spray finish", "2-hour session", "Group discounts (5+)"],
     popular: false,
@@ -27,7 +27,7 @@ const services = [
   {
     icon: Camera,
     title: "Editorial & Photoshoot",
-    price: "From ₦30,000",
+    price: "From ₦150,000",
     description: "Camera-ready perfection for professional shoots, campaigns, and content creation.",
     features: ["Colour consultation", "HD/4K camera ready", "Half-day or full-day rates", "On-location available", "Multiple look changes"],
     popular: false,
@@ -35,7 +35,7 @@ const services = [
   {
     icon: PartyPopper,
     title: "Birthday Glam",
-    price: "From ₦25,000",
+    price: "From ₦125,000",
     description: "Make your birthday unforgettable with a custom glam look that celebrates you.",
     features: ["Custom birthday look", "Celebrant package", "Guest group rates", "Themed looks available", "Photo-ready finish"],
     popular: false,
@@ -43,7 +43,7 @@ const services = [
   {
     icon: Clapperboard,
     title: "Film & TV Makeup",
-    price: "From ₦50,000",
+    price: "From ₦250,000",
     description: "Professional on-set makeup for Nollywood productions and television appearances.",
     features: ["Continuity expertise", "HD studio lighting ready", "Full-day on-set", "Quick change capability", "Special effects available"],
     popular: false,
@@ -51,7 +51,7 @@ const services = [
   {
     icon: GraduationCap,
     title: "Makeup Masterclass",
-    price: "From ₦80,000",
+    price: "From ₦400,000",
     description: "Learn the art of professional makeup with hands-on training at our Ajah studio.",
     features: ["1-on-1 or group options", "Hands-on practice", "Product knowledge", "Certificate issued", "Starter kit guidance"],
     popular: false,
@@ -59,12 +59,12 @@ const services = [
 ];
 
 const addons = [
-  { name: "Gele Tying", price: "₦5,000" },
-  { name: "Skincare Prep Treatment", price: "₦8,000" },
-  { name: "Extra Lash Sets", price: "₦3,000" },
-  { name: "Home/Location Service", price: "₦10,000+" },
-  { name: "Bridal Train (per person)", price: "₦15,000" },
-  { name: "Touch-up Artist on Standby", price: "₦20,000" },
+  { name: "Gele Tying", price: "₦25,000" },
+  { name: "Skincare Prep Treatment", price: "₦40,000" },
+  { name: "Extra Lash Sets", price: "₦15,000" },
+  { name: "Home/Location Service", price: "₦50,000+" },
+  { name: "Bridal Train (per person)", price: "₦75,000" },
+  { name: "Touch-up Artist on Standby", price: "₦100,000" },
 ];
 
 function ServiceCard({ service, index }: { service: typeof services[0]; index: number }) {

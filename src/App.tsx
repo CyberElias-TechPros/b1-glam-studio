@@ -13,7 +13,7 @@ import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import Blog from "./pages/Blog";
 import NotFound from "./pages/NotFound";
-import PageTransition from "./components/PageTransition";
+import PageTransition, { LogoTransition } from "./components/PageTransition";
 import ScrollProgress from "./components/ScrollProgress";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -23,8 +23,10 @@ function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+    <>
+      <LogoTransition />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
         <Route 
           path="/" 
           element={
@@ -107,6 +109,7 @@ function AnimatedRoutes() {
         />
       </Routes>
     </AnimatePresence>
+    </>
   );
 }
 

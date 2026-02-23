@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 const faqs = [
   { q: "Do you provide lashes?", a: "Yes! Lash application is included in all our makeup services. We use premium quality lashes that complement your look." },
   { q: "How long does a session take?", a: "A standard glam session takes 1.5–2 hours. Bridal makeup with trial session takes about 2.5–3 hours." },
-  { q: "Do you offer home service?", a: "Yes, we offer home/location service at an additional fee of ₦10,000+. Perfect for brides and large groups." },
+  { q: "Do you offer home service?", a: "Yes, we offer home/location service at an additional fee of ₦50,000+. Perfect for brides and large groups." },
   { q: "What products do you use?", a: "We use a combination of premium brands including MAC, Fenty Beauty, Black Opal, and other professional-grade products suited for dark skin tones." },
   { q: "How far in advance should I book for a wedding?", a: "We recommend booking at least 2–3 months in advance for bridal services, especially during peak wedding season (November – February)." },
   { q: "Do you offer group discounts?", a: "Yes! Groups of 5 or more for events like bridal trains or aso-ebi receive a special group rate. Contact us for details." },

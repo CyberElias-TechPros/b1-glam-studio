@@ -43,7 +43,7 @@ function FeaturedCarousel() {
   const captions = ["Traditional Bridal Glam", "Owambe Queen", "Editorial Perfection", "Melanin Magic", "Soft Glow Beauty", "Bold Afrocentric", "Luxury Bridal", "Dark Skin Radiance"];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-sm group" style={{ height: 420 }}>
+    <div className="relative w-full overflow-hidden rounded-sm group bg-secondary" style={{ height: 600 }}>
       <AnimatePresence mode="wait">
         <motion.img 
           key={current} 
@@ -53,7 +53,7 @@ function FeaturedCarousel() {
           animate={{ opacity: 1 }} 
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-contain object-center"
         />
       </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

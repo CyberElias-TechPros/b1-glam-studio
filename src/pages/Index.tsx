@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
-import { ArrowRight, Star, Sparkles, Crown, Camera, Heart } from "lucide-react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { useRef, useState, useEffect, useMemo } from "react";
+import { ArrowRight, Star, Sparkles, Crown, Camera, Heart, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, GoldDivider, ParallaxCard, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
+import { AnimatedSection, SectionHeading, ParallaxCard, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
 import { ParallaxHero } from "@/components/ParallaxHero";
 import { GoldParticles } from "@/components/GoldParticles";
 import { InstagramFeed } from "@/components/InstagramFeed";
@@ -32,6 +32,192 @@ const testimonials = [
   { name: "Chidinma O.", event: "Owambe", quote: "Finally, a makeup artist who truly understands dark skin tones. Pure perfection every single time." },
 ];
 
+// ─── Lightbox Component ─────────────────────────────────────────────
+function Lightbox({ images, currentIndex, onClose, onNavigate }: { images: string[]; currentIndex: number; onClose: () => void; onNavigate: (i: number) => void }) {
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+
+  // Reset zoom when image changes
+  useEffect(() => {
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  }, [currentIndex]);
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") onNavigate((currentIndex + 1) % images.length);
+      if (e.key === "ArrowLeft") onNavigate((currentIndex - 1 + images.length) % images.length);
+      if (e.key === "+" || e.key === "=") setZoom((z) => Math.min(z + 0.5, 3));
+      if (e.key === "-") setZoom((z) => Math.max(z - 0.5, 1));
+      if (e.key === "0") { setZoom(1); setPosition({ x: 0, y: 0 }); }
+    };
+    document.addEventListener("keydown", h);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
+  }, [currentIndex, images.length, onClose, onNavigate]);
+
+  // Touch swipe handling
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (zoom > 1) return;
+    dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (zoom > 1) return;
+    const deltaX = e.changedTouches[0].clientX - dragStart.current.x;
+    const threshold = 50;
+    
+    if (Math.abs(deltaX) > threshold) {
+      if (deltaX > 0) {
+        onNavigate((currentIndex - 1 + images.length) % images.length);
+      } else {
+        onNavigate((currentIndex + 1) % images.length);
+      }
+    }
+  };
+
+  // Mouse drag for zoomed images
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom > 1) {
+      setIsDragging(true);
+      dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoom > 1) {
+      setPosition({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const toggleZoom = () => {
+    if (zoom === 1) {
+      setZoom(2);
+    } else {
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+    }
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onClose} />
+      
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent">
+        <span className="text-sm text-white/70 font-sans">{currentIndex + 1} / {images.length}</span>
+        <div className="flex gap-2">
+          <button 
+            onClick={toggleZoom}
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+            aria-label={zoom > 1 ? "Zoom out" : "Zoom in"}
+          >
+            {zoom > 1 ? <ZoomOut className="w-5 h-5 text-white" /> : <ZoomIn className="w-5 h-5 text-white" />}
+          </button>
+          <button 
+            onClick={onClose} 
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+            aria-label="Close lightbox"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main image */}
+      <div 
+        className="relative z-10 flex items-center justify-center w-full h-full"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        <AnimatePresence mode="wait">
+          <motion.img 
+            key={currentIndex} 
+            src={images[currentIndex]} 
+            alt="" 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            exit={{ opacity: 0 }} 
+            transition={{ duration: 0.3 }}
+            style={{
+              transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+              cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
+            }}
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-sm transition-transform duration-200"
+            draggable={false}
+          />
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation arrows */}
+      <button 
+        onClick={() => onNavigate((currentIndex - 1 + images.length) % images.length)} 
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/25 transition-colors"
+        aria-label="Previous image"
+      >
+        <ChevronLeft className="w-6 h-6 text-white" />
+      </button>
+      <button 
+        onClick={() => onNavigate((currentIndex + 1) % images.length)} 
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/25 transition-colors"
+        aria-label="Next image"
+      >
+        <ChevronRight className="w-6 h-6 text-white" />
+      </button>
+
+      {/* Bottom bar */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/50 to-transparent">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-sans font-semibold uppercase tracking-widest text-primary">{portfolioItems[currentIndex]?.category || "Portfolio"}</span>
+          <Link to="/portfolio" onClick={onClose} className="px-5 py-2 text-xs font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm hover:opacity-90 transition-opacity">View Full Portfolio</Link>
+        </div>
+        
+        {/* Thumbnail strip */}
+        <div className="flex gap-1.5 overflow-x-auto pb-2 justify-center scrollbar-hide">
+          {images.slice(Math.max(0, currentIndex - 4), Math.min(images.length, currentIndex + 5)).map((img, i) => {
+            const ri = Math.max(0, currentIndex - 4) + i;
+            return (
+              <button 
+                key={ri} 
+                onClick={() => onNavigate(ri)} 
+                className={`flex-shrink-0 w-14 h-14 rounded-sm overflow-hidden transition-all duration-200 ${ri === currentIndex ? "ring-2 ring-primary scale-110" : "opacity-50 hover:opacity-80"}`}
+              >
+                <img src={img} alt="" className="w-full h-full object-cover" />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Zoom indicator */}
+        {zoom > 1 && (
+          <div className="text-center mt-2">
+            <span className="text-xs text-white/50">{Math.round(zoom * 100)}% • Press 0 to reset</span>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Index() {
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -41,6 +227,10 @@ export default function Index() {
 
   const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  // Lightbox state
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const lightboxImages = useMemo(() => portfolioItems.map((item) => item.image), []);
 
   return (
     <Layout>
@@ -166,14 +356,22 @@ export default function Index() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {portfolioItems.map((item, i) => (
               <AnimatedSection key={item.category} delay={i * 0.1} animation="fade-up">
-                <Link to="/portfolio" className="group block relative overflow-hidden rounded-sm aspect-[3/4]">
+                <div 
+                  onClick={() => setLightbox(i)}
+                  className="group block relative overflow-hidden rounded-sm aspect-[3/4] cursor-pointer"
+                >
                   <img src={item.image} alt={item.category} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} group-hover:opacity-40 transition-opacity`} />
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                     <span className="text-sm font-serif text-foreground">{item.category}</span>
                   </div>
                   <div className="absolute inset-0 border border-transparent group-hover:border-primary/30 rounded-sm transition-colors" />
-                </Link>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+                      <ZoomIn className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                </div>
               </AnimatedSection>
             ))}
           </div>
@@ -255,6 +453,18 @@ export default function Index() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox !== null && (
+          <Lightbox 
+            images={lightboxImages} 
+            currentIndex={lightbox} 
+            onClose={() => setLightbox(null)} 
+            onNavigate={setLightbox} 
+          />
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

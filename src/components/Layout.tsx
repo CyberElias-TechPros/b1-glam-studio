@@ -220,6 +220,21 @@ export function Footer() {
             Where Dark Skin Meets Its Perfect Canvas.
           </p>
         </div>
+
+        {/* Credit */}
+        <div className="mt-6 pt-4 border-t border-border/50 text-center">
+          <p className="text-xs text-muted-foreground">
+            Made by{" "}
+            <a
+              href="https://cybereliasacademy.com.ng"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors duration-300 font-medium"
+            >
+              Cyber Elias Academy
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );

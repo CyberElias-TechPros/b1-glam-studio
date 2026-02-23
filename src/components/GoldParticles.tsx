@@ -60,7 +60,7 @@ export function GoldParticles({ count = 15, className = "", interactive = true }
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          size: Math.random() * 4 + 2,
+          size: Math.random() * 10 + 6,
           duration: Math.random() * 4 + 3,
           delay: Math.random() * 2,
           opacity: Math.random() * 0.5 + 0.3,

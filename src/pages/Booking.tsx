@@ -271,7 +271,7 @@ export default function Booking() {
                           className="w-full px-4 py-3 bg-card border border-border rounded-sm text-sm text-foreground focus:outline-none focus:border-primary transition-colors appearance-none"
                         >
                           <option value="studio">Studio (Addo Road, Ajah)</option>
-                          <option value="home">Home / Location Service (+₦10,000)</option>
+                          <option value="home">Home / Location Service (+₦50,000)</option>
                         </select>
                       </div>
                     </div>
