@@ -1,6 +1,6 @@
 // Dynamically import all images from src/assets/images/
 const imageModules = import.meta.glob<{ default: string }>(
-  '/src/assets/images/*.jpg',
+  '../assets/images/*.jpg',
   { eager: true }
 );
 

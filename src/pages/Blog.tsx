@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
 import { GoldParticles } from "@/components/GoldParticles";
 import { blogPosts, categories, getPostBySlug, getFeaturedPost, getRelatedPosts, getPostsByCategory, BlogPost } from "@/data/blog";
+import { AutorelaxedAd, FluidAd, LazyAd } from "@/components/ads";
 
 // Blog Card Component
 function BlogCard({ post, index }: { post: BlogPost; index: number }) {
@@ -34,29 +35,39 @@ function BlogCard({ post, index }: { post: BlogPost; index: number }) {
           </div>
           
           {/* Content */}
-          <div className="p-5 sm:p-6">
+          <div className="p-5 sm:p-6 flex flex-col">
+            {/* Meta Info */}
             <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
               <span className="flex items-center gap-1">
                 <Calendar size={12} />
                 {new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </span>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
               <span className="flex items-center gap-1">
                 <Clock size={12} />
                 {post.readTime}
               </span>
             </div>
             
-            <h3 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+            {/* Title - H2 for SEO structure on listing */}
+            <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
               {post.title}
-            </h3>
+            </h2>
             
-            <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+            {/* Excerpt with improved readability */}
+            <p className="text-sm text-muted-foreground line-clamp-3 mb-4 leading-relaxed flex-grow">
               {post.excerpt}
             </p>
             
-            <span className="inline-flex items-center text-sm font-medium text-primary group-hover:underline">
-              Read More <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
-            </span>
+            {/* Author and Read More */}
+            <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/50">
+              <span className="text-xs text-muted-foreground">
+                By <span className="text-primary font-medium">{post.author}</span>
+              </span>
+              <span className="inline-flex items-center text-sm font-medium text-primary group-hover:underline">
+                Read More <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+              </span>
+            </div>
           </div>
         </article>
       </Link>
@@ -67,10 +78,10 @@ function BlogCard({ post, index }: { post: BlogPost; index: number }) {
 // Featured Post Component
 function FeaturedPost({ post }: { post: BlogPost }) {
   return (
-    <section className="mb-16 sm:mb-20">
+    <section className="mb-16 sm:mb-20" aria-label="Featured Article">
       <AnimatedSection>
         <Link to={`/blog/${post.slug}`} className="block group">
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 bg-card border border-border rounded-sm overflow-hidden hover:border-primary/50 transition-all duration-300">
+          <article className="relative grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 bg-card border border-border rounded-sm overflow-hidden hover:border-primary/50 transition-all duration-300">
             {/* Image Side */}
             <div className="relative h-64 sm:h-80 lg:h-96 bg-secondary">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-transparent" />
@@ -87,7 +98,11 @@ function FeaturedPost({ post }: { post: BlogPost }) {
             
             {/* Content Side */}
             <div className="p-6 sm:p-10 lg:py-16 flex flex-col justify-center">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
+              {/* Meta Info */}
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
+                <span className="px-2 py-0.5 text-xs font-sans font-medium uppercase tracking-wider bg-primary/10 text-primary rounded-sm">
+                  {categories.find((c) => c.id === post.category)?.label || post.category}
+                </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />
                   {new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
@@ -99,21 +114,27 @@ function FeaturedPost({ post }: { post: BlogPost }) {
                 </span>
               </div>
               
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-4 group-hover:text-primary transition-colors">
+              {/* Title */}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-4 group-hover:text-primary transition-colors leading-tight">
                 {post.title}
               </h2>
               
-              <p className="text-muted-foreground mb-6 leading-relaxed">
+              {/* Excerpt */}
+              <p className="text-muted-foreground mb-6 leading-relaxed text-base">
                 {post.excerpt}
               </p>
               
-              <div className="mt-auto">
+              {/* Author and CTA */}
+              <div className="flex items-center justify-between mt-auto">
+                <span className="text-sm text-muted-foreground">
+                  By <span className="text-primary font-medium">{post.author}</span>
+                </span>
                 <span className="inline-flex items-center text-primary font-medium group-hover:underline">
                   Read Full Article <ArrowRight size={16} className="ml-2 transition-transform group-hover:translate-x-2" />
                 </span>
               </div>
             </div>
-          </div>
+          </article>
         </Link>
       </AnimatedSection>
     </section>
@@ -196,9 +217,9 @@ function RelatedPosts({ posts }: { posts: BlogPost[] }) {
   if (posts.length === 0) return null;
 
   return (
-    <section className="mt-16 pt-12 border-t border-border">
+    <section className="mt-16 pt-12 border-t border-border" aria-label="Related Articles">
       <AnimatedSection>
-        <h3 className="text-2xl font-serif font-bold text-foreground mb-8">Related Articles</h3>
+        <h2 className="text-2xl font-serif font-bold text-foreground mb-8">Related Articles</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {posts.map((post, index) => (
             <motion.div
@@ -207,8 +228,8 @@ function RelatedPosts({ posts }: { posts: BlogPost[] }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <Link to={`/blog/${post.slug}`} className="block group">
-                <article className="bg-card border border-border rounded-sm overflow-hidden transition-all duration-300 hover:border-primary/50">
+              <Link to={`/blog/${post.slug}`} className="block group h-full">
+                <article className="bg-card border border-border rounded-sm overflow-hidden h-full transition-all duration-300 hover:border-primary/50">
                   <div className="h-32 bg-secondary relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -216,12 +237,18 @@ function RelatedPosts({ posts }: { posts: BlogPost[] }) {
                     </div>
                   </div>
                   <div className="p-4">
-                    <h4 className="font-serif font-semibold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                    <h3 className="font-serif font-semibold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-snug">
                       {post.title}
-                    </h4>
-                    <span className="text-xs text-muted-foreground mt-2 block">
-                      {post.readTime}
-                    </span>
+                    </h3>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-muted-foreground">
+                        {post.readTime}
+                      </span>
+                      <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+                      <span className="text-xs text-primary font-medium">
+                        {post.author}
+                      </span>
+                    </div>
                   </div>
                 </article>
               </Link>
@@ -277,6 +304,7 @@ function BlogPostView() {
           {/* Post Header */}
           <AnimatedSection delay={0.1}>
             <header className="mb-10">
+              {/* Category and Meta */}
               <div className="flex flex-wrap items-center gap-3 mb-4">
                 <span className="px-3 py-1 text-xs font-sans font-medium uppercase tracking-wider bg-primary/10 text-primary rounded-sm">
                   {categories.find((c) => c.id === post.category)?.label || post.category}
@@ -285,21 +313,38 @@ function BlogPostView() {
                   <Calendar size={14} />
                   {new Date(post.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                 </span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
                 <span className="text-sm text-muted-foreground flex items-center gap-1">
                   <Clock size={14} />
                   {post.readTime}
                 </span>
               </div>
               
+              {/* Title - H1 for SEO */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-foreground leading-tight mb-6">
                 {post.title}
               </h1>
               
-              <p className="text-lg text-muted-foreground leading-relax mb-6">
+              {/* Excerpt as introduction */}
+              <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-6">
                 {post.excerpt}
               </p>
               
-              <SocialShare title={post.title} slug={post.slug} />
+              {/* Author and Share */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center">
+                    <span className="text-primary-foreground font-serif font-bold text-sm">
+                      {post.author.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{post.author}</p>
+                    <p className="text-xs text-muted-foreground">Beauty Expert</p>
+                  </div>
+                </div>
+                <SocialShare title={post.title} slug={post.slug} />
+              </div>
             </header>
           </AnimatedSection>
 
@@ -313,17 +358,10 @@ function BlogPostView() {
             </div>
           </AnimatedSection>
 
-          {/* Post Content */}
+          {/* Post Content - SEO optimized with proper heading hierarchy */}
           <AnimatedSection delay={0.3}>
             <div 
-              className="prose prose-invert prose-lg max-w-none
-                prose-headings:font-serif prose-headings:text-foreground
-                prose-p:text-muted-foreground prose-p:leading-relaxed
-                prose-strong:text-foreground
-                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                prose-li:text-muted-foreground
-                prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-blockquote:italic
-                prose-code:text-primary prose-code:bg-primary/10 prose-code:px-2 prose-code:py-0.5 prose-code:rounded-sm"
+              className="blog-content"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
           </AnimatedSection>
@@ -402,15 +440,21 @@ function BlogListing() {
               transition={{ duration: 0.3 }}
             >
               {postsToShow.length > 0 ? (
-                <StaggerContainer delay={0.1} staggerDelay={0.1}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {postsToShow.map((post, index) => (
-                      <StaggerItem key={post.id}>
-                        <BlogCard post={post} index={index} />
-                      </StaggerItem>
-                    ))}
-                  </div>
-                </StaggerContainer>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {postsToShow.map((post, index) => (
+                    <>
+                      <BlogCard key={post.id} post={post} index={index} />
+                      {/* Insert autorelaxed ad after every 4 posts */}
+                      {(index + 1) % 4 === 0 && index !== postsToShow.length - 1 && (
+                        <div key={`ad-${index}`} className="md:col-span-2 lg:col-span-3 my-4">
+                          <LazyAd>
+                            <AutorelaxedAd className="min-h-[100px]" />
+                          </LazyAd>
+                        </div>
+                      )}
+                    </>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-16">
                   <p className="text-muted-foreground">No posts found in this category.</p>

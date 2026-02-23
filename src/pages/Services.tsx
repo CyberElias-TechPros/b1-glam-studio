@@ -5,6 +5,7 @@ import { Check, ArrowRight, Crown, Sparkles, Camera, PartyPopper, GraduationCap,
 import Layout from "@/components/Layout";
 import { AnimatedSection, SectionHeading, GoldDivider, StaggerContainer, StaggerItem, ParallaxCard } from "@/components/AnimatedSection";
 import { GoldParticles } from "@/components/GoldParticles";
+import { FluidAd, LazyAd } from "@/components/ads";
 
 const services = [
   {
@@ -148,13 +149,21 @@ export default function Services() {
       {/* Services Grid */}
       <section className="section-padding bg-background">
         <div className="container-narrow mx-auto">
-          <StaggerContainer delay={0.1} staggerDelay={0.1}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, i) => (
-              <StaggerItem key={service.title}>
-                <ServiceCard service={service} index={i} />
-              </StaggerItem>
+              <>
+                <ServiceCard key={service.title} service={service} index={i} />
+                {/* Insert fluid ad after every 3 services */}
+                {(i + 1) % 3 === 0 && i !== services.length - 1 && (
+                  <div key={`ad-${i}`} className="md:col-span-2 lg:col-span-3 my-4">
+                    <LazyAd>
+                      <FluidAd className="min-h-[120px]" />
+                    </LazyAd>
+                  </div>
+                )}
+              </>
             ))}
-          </StaggerContainer>
+          </div>
         </div>
       </section>
 

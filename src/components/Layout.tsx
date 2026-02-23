@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone, Instagram, Facebook, MapPin, Clock, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FloatingInstagramBadge } from "./InstagramFeed";
+import { AutoResponsiveAd, LazyAd } from "./ads";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -242,13 +243,41 @@ export function WhatsAppButton() {
 
 interface LayoutProps {
   children: React.ReactNode;
+  showHeaderAd?: boolean;
+  showFooterAd?: boolean;
 }
 
-export default function Layout({ children }: LayoutProps) {
+export function HeaderAd() {
+  return (
+    <div className="bg-secondary/50 border-b border-border">
+      <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        <LazyAd>
+          <AutoResponsiveAd className="min-h-[90px]" />
+        </LazyAd>
+      </div>
+    </div>
+  );
+}
+
+export function FooterAd() {
+  return (
+    <div className="bg-secondary/30 border-t border-border">
+      <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <LazyAd>
+          <AutoResponsiveAd className="min-h-[90px]" />
+        </LazyAd>
+      </div>
+    </div>
+  );
+}
+
+export default function Layout({ children, showHeaderAd = false, showFooterAd = false }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {showHeaderAd && <HeaderAd />}
       <main className="flex-1">{children}</main>
+      {showFooterAd && <FooterAd />}
       <Footer />
       <WhatsAppButton />
       <FloatingInstagramBadge />
