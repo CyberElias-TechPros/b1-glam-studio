@@ -1,4 +1,8 @@
-// Dynamically import all images from src/assets/images/
+// Portfolio Image Management
+// Dynamically imports images from src/assets/images/
+// WebP conversion is handled automatically by the WebPImage component
+
+// Import JPEG images (original format)
 const imageModules = import.meta.glob<{ default: string }>(
   '../assets/images/*.jpg',
   { eager: true }
@@ -24,6 +28,7 @@ function seededShuffle(arr: string[], seed: number): string[] {
 // Session seed so order stays consistent during one visit
 const SESSION_SEED = Math.floor(Math.random() * 10000);
 
+// Shuffled images for display
 export const shuffledImages = seededShuffle(allPortfolioImages, SESSION_SEED);
 
 // Get N images starting from offset (wraps around)
@@ -38,4 +43,22 @@ export function getImages(count: number, offset = 0): string[] {
 // Get a single image at index
 export function getImage(index: number): string {
   return shuffledImages[index % shuffledImages.length];
+}
+
+// Get image URLs (for backward compatibility)
+export function getImageUrls(count: number, offset = 0): string[] {
+  return getImages(count, offset);
+}
+
+// Statistics
+export function getImageStats() {
+  return {
+    total: allPortfolioImages.length,
+    webpCoverage: 'Auto-converted on demand',
+  };
+}
+
+// Log stats in development
+if (import.meta.env.DEV) {
+  console.log(`📸 Portfolio Images: ${allPortfolioImages.length} total - WebP conversion is automatic`);
 }

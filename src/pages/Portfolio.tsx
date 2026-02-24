@@ -10,6 +10,7 @@ import { AnimatedSection, SectionHeading } from "@/components/AnimatedSection";
 import { GoldParticles } from "@/components/GoldParticles";
 import { shuffledImages, getImages } from "@/lib/portfolioImages";
 import { FluidAd, LazyAd } from "@/components/ads";
+import { WebPImage } from "@/components/WebPImage";
 
 const IMAGES_PER_PAGE = 24;
 const CAROUSEL_COUNT = 8;
@@ -45,16 +46,21 @@ function FeaturedCarousel() {
   return (
     <div className="relative w-full overflow-hidden rounded-sm group bg-secondary" style={{ height: 600 }}>
       <AnimatePresence mode="wait">
-        <motion.img 
+        <motion.div
           key={current} 
-          src={featuredImages[current]} 
-          alt={captions[current]}
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }} 
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute inset-0 w-full h-full object-contain object-center"
-        />
+          className="absolute inset-0 w-full h-full"
+        >
+          <WebPImage 
+            src={featuredImages[current]}
+            alt={captions[current]}
+            loading="eager"
+            className="w-full h-full object-contain object-center"
+          />
+        </motion.div>
       </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute bottom-6 left-6 z-10">
@@ -275,13 +281,14 @@ export default function Portfolio() {
   const [count, setCount] = useState(IMAGES_PER_PAGE);
   const [lightbox, setLightbox] = useState<number | null>(null);
 
-  const all = useMemo(() => shuffledImages.map((src, i) => ({ src, cat: getCategoryForIndex(i), i })), []);
+  const all = useMemo(() => shuffledImages.map((img, i) => ({ img, cat: getCategoryForIndex(i), i })), []);
   const filtered = useMemo(() => category === "All" ? all : all.filter((x) => x.cat === category), [category, all]);
   const visible = filtered.slice(0, count);
 
   useEffect(() => setCount(IMAGES_PER_PAGE), [category]);
 
-  const lbImages = useMemo(() => filtered.map((x) => x.src), [filtered]);
+  // Get image URLs for lightbox
+  const lbImages = useMemo(() => filtered.map((x) => x.img), [filtered]);
 
   return (
     <Layout>
@@ -324,14 +331,18 @@ export default function Portfolio() {
       <section className="py-16 bg-background">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {visible.map((img, idx) => (
+            {visible.map((item, idx) => (
               <>
-                <div key={img.i} onClick={() => setLightbox(idx)}
+                <div key={item.i} onClick={() => setLightbox(idx)}
                   className="group relative overflow-hidden rounded-sm cursor-pointer bg-secondary h-[280px] sm:h-[320px] lg:h-[360px]">
-                  <img src={img.src} alt={`B1touch look ${img.i + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <WebPImage 
+                    src={item.img}
+                    alt={`B1touch look ${item.i + 1}`}
+                    loading="lazy"
+                    className="w-full h-full transition-transform duration-700 group-hover:scale-110"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3">
-                    <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-primary">{img.cat}</span>
+                    <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-primary">{item.cat}</span>
                     <div className="flex items-center gap-2 mt-1">
                       <ZoomIn className="w-4 h-4 text-white/80" />
                       <span className="text-xs text-white/80">View</span>

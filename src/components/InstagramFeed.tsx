@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, MessageCircle, Instagram as InstagramIcon, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getImages } from "@/lib/portfolioImages";
+import { WebPImage } from "@/components/WebPImage";
 
 // Use real images from portfolio folder, randomized
 const feedImages = getImages(9, 50);
@@ -243,13 +244,11 @@ function InstagramPost({ post, index, onClick }: { post: typeof instagramPosts[0
       onClick={onClick}
     >
       {/* Image with zoom effect */}
-      <motion.img
-        whileHover={{ scale: 1.1 }}
-        transition={{ duration: 0.4 }}
+      <WebPImage
         src={post.image}
         alt={post.caption}
-        className="w-full h-full object-cover"
         loading="lazy"
+        className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-110"
       />
       
       {/* Gold gradient overlay on hover */}
@@ -353,7 +352,7 @@ export function InstagramFeed() {
   }, []);
 
   // Get all images and captions for lightbox
-  const allImages = instagramPosts.map(post => post.image);
+  const allImages = useMemo(() => instagramPosts.map(post => post.image), []);
   const allCaptions = instagramPosts.map(post => post.caption);
 
   return (
