@@ -28,7 +28,8 @@ export function FluidAd({
     // Push ad to AdSense after component mounts
     try {
       if (typeof window !== 'undefined') {
-        const adsbygoogle = (window as any).adsbygoogle || [];
+        const win = window as Window & { adsbygoogle?: unknown[] };
+        const adsbygoogle = win.adsbygoogle || [];
         adsbygoogle.push({});
       }
     } catch (error) {
