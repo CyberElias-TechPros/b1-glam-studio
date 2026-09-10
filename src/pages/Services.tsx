@@ -151,8 +151,8 @@ export default function Services() {
         <div className="container-narrow mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, i) => (
-              <>
-                <ServiceCard key={service.title} service={service} index={i} />
+              <div key={service.title} className="contents">
+                <ServiceCard service={service} index={i} />
                 {/* Insert fluid ad after every 3 services */}
                 {(i + 1) % 3 === 0 && i !== services.length - 1 && (
                   <div key={`ad-${i}`} className="md:col-span-2 lg:col-span-3 my-4">
@@ -161,7 +161,7 @@ export default function Services() {
                     </LazyAd>
                   </div>
                 )}
-              </>
+              </div>
             ))}
           </div>
         </div>

@@ -154,6 +154,9 @@ export function Footer() {
               <Link to="/booking" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
                 Book a Session
               </Link>
+              <Link to="/booking/lookup" className="block text-sm text-primary font-medium hover:underline">
+                Track Booking Status
+              </Link>
             </div>
           </div>
 
@@ -216,9 +219,13 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} B1touch Artistry. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Where Dark Skin Meets Its Perfect Canvas.
-          </p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>Where Dark Skin Meets Its Perfect Canvas.</span>
+            <span>·</span>
+            <Link to="/admin" className="hover:text-primary transition-colors">
+              Staff Portal
+            </Link>
+          </div>
         </div>
 
         {/* Credit */}

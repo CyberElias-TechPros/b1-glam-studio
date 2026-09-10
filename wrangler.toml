@@ -1,0 +1,38 @@
+name = "b1-glam-studio-api"
+main = "worker/src/index.ts"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare D1 Relational Database
+[[d1_databases]]
+binding = "DB"
+database_name = "b1_glam_db"
+database_id = "b1_glam_db_id"
+migrations_dir = "worker/src/db/migrations"
+
+# Cloudflare R2 Object Storage for Client & Portfolio Media
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "b1-glam-media"
+
+# Cloudflare KV for High-Speed Caching & Rate Limiting
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "b1_glam_cache_kv_id"
+
+# Scheduled Cron Trigger (runs daily at midnight UTC for cleanup/reminders)
+[triggers]
+crons = ["0 0 * * *"]
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "production"
+FRONTEND_URL = "https://b1-glam-studio.vercel.app"
+STUDIO_WHATSAPP = "2348061651126"
+STUDIO_EMAIL = "info@b1touchartistry.com"
+
+# Staging / Preview Environment
+[env.staging]
+name = "b1-glam-studio-api-staging"
+[env.staging.vars]
+ENVIRONMENT = "staging"

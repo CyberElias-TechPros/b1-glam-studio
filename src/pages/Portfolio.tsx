@@ -332,8 +332,8 @@ export default function Portfolio() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {visible.map((item, idx) => (
-              <>
-                <div key={item.i} onClick={() => setLightbox(idx)}
+              <div key={item.i} className="contents">
+                <div onClick={() => setLightbox(idx)}
                   className="group relative overflow-hidden rounded-sm cursor-pointer bg-secondary h-[280px] sm:h-[320px] lg:h-[360px]">
                   <WebPImage 
                     src={item.img}
@@ -358,7 +358,7 @@ export default function Portfolio() {
                     </LazyAd>
                   </div>
                 )}
-              </>
+              </div>
             ))}
           </div>
 
