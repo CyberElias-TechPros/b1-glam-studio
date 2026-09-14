@@ -1,287 +1,318 @@
-import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Clock,
+  ArrowLeft,
+  ArrowUpRight,
   Calendar,
-  Share2,
-  Instagram,
+  Clock,
   Facebook,
-  ArrowRight,
-  ChevronLeft,
+  Instagram,
+  Loader2,
   MessageCircle,
   Search,
   Send,
-  Loader2,
-  Sparkles,
-  User,
+  Share2,
 } from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection } from "@/components/AnimatedSection";
-import { GoldParticles } from "@/components/GoldParticles";
-import { api, BlogPostItem } from "@/lib/api";
-import { categories, blogPosts as fallbackBlogPosts } from "@/data/blog";
-import { NewsletterForm } from "@/components/NewsletterForm";
 import { useToast } from "@/hooks/use-toast";
+import { api, BlogPostItem } from "@/lib/api";
+import { blogPosts as fallbackBlogPosts, categories } from "@/data/blog";
+import { getImages, shuffledImages, sourcesFor } from "@/lib/portfolioImages";
+import {
+  Magnetic,
+  Ornament,
+  Reveal,
+  RevealMedia,
+  SectionIndex,
+  SplitText,
+} from "@/components/motion/Reveal";
 
-// Blog Card Component
-function BlogCard({ post, index }: { post: BlogPostItem; index: number }) {
+/* ───────────────────────── helpers ───────────────────────── */
+
+function hashString(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) % 100000;
+  return hash;
+}
+
+/** Editorial art direction: articles inherit studio photography when no cover is set. */
+function coverFor(post: { slug: string; featured_image?: string | null }) {
+  const cover = post.featured_image;
+  if (cover && !cover.includes("placeholder")) return cover;
+  return shuffledImages[hashString(post.slug) % shuffledImages.length];
+}
+
+function categoryLabel(id: string) {
+  return categories.find((category) => category.id === id)?.label || id;
+}
+
+function formatDate(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+/* ───────────────────────── cards ───────────────────────── */
+
+function PostCard({ post, index }: { post: BlogPostItem; index: number }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.08 }}
-      whileHover={{ y: -5 }}
-      className="group"
-    >
-      <Link to={`/blog/${post.slug}`} className="block h-full">
-        <article className="bg-card border border-border rounded-sm overflow-hidden h-full transition-all duration-300 hover:border-primary/50 hover:gold-glow flex flex-col justify-between">
-          <div>
-            {/* Featured Image placeholder */}
-            <div className="relative h-48 sm:h-56 overflow-hidden bg-secondary">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl opacity-20">✦</span>
-              </div>
-              {/* Category Badge */}
-              <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 text-xs font-sans font-medium uppercase tracking-wider bg-primary text-primary-foreground rounded-sm">
-                  {categories.find((c) => c.id === post.category)?.label || post.category}
-                </span>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-5 sm:p-6">
-              {/* Meta Info */}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 font-sans">
-                <span className="flex items-center gap-1">
-                  <Calendar size={12} />
-                  {new Date(post.published_at || Date.now()).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-                <span className="flex items-center gap-1">
-                  <Clock size={12} />
-                  {post.read_time}
-                </span>
-              </div>
-
-              <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
-                {post.title}
-              </h2>
-
-              <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                {post.excerpt}
-              </p>
-            </div>
+    <Reveal variant="up" delay={Math.min(index, 6) * 0.07}>
+      <article className="group h-full">
+        <Link to={`/blog/${post.slug}`} className="flex h-full flex-col" data-cursor="view" data-cursor-label="Read">
+          <div className="overflow-hidden rounded-sm">
+            <RevealMedia
+              src={coverFor(post)}
+              alt={post.title}
+              ratio="16 / 11"
+              parallax={12}
+              className="rounded-sm"
+            />
           </div>
-
-          <div className="p-5 sm:p-6 pt-0 border-t border-border/50 flex items-center justify-between font-sans text-xs">
-            <span className="text-muted-foreground">
-              By <span className="text-primary font-medium">{post.author}</span>
-            </span>
-            <span className="inline-flex items-center font-medium text-primary group-hover:underline">
-              Read More <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+          <div className="flex flex-1 flex-col pt-6">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="eyebrow">{categoryLabel(post.category)}</span>
+              <span className="font-sans text-[0.6875rem] text-muted-foreground">
+                {formatDate(post.published_at)}
+              </span>
+            </div>
+            <h3 className="mt-4 font-display text-2xl leading-snug transition-colors duration-500 group-hover:text-gold-light">
+              {post.title}
+            </h3>
+            <p className="mt-3 flex-1 font-sans text-sm leading-[1.85] text-muted-foreground">
+              {post.excerpt}
+            </p>
+            <span className="mt-5 flex items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.2em] text-gold-light">
+              <Clock size={12} /> {post.read_time || "4 min read"}
             </span>
           </div>
-        </article>
-      </Link>
-    </motion.div>
+        </Link>
+      </article>
+    </Reveal>
   );
 }
 
-// Featured Post Component
 function FeaturedPost({ post }: { post: BlogPostItem }) {
   return (
-    <section className="mb-16 sm:mb-20" aria-label="Featured Article">
-      <AnimatedSection>
-        <Link to={`/blog/${post.slug}`} className="block group">
-          <article className="relative grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 bg-card border border-border rounded-sm overflow-hidden hover:border-primary/50 transition-all duration-300 shadow-sm">
-            {/* Image Side */}
-            <div className="relative h-64 sm:h-80 lg:h-96 bg-secondary">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-6xl opacity-20">✦</span>
-              </div>
-              <div className="absolute top-4 left-4">
-                <span className="px-4 py-1.5 text-xs font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm shadow-sm">
-                  Featured Article
-                </span>
-              </div>
+    <Reveal variant="up">
+      <article className="group">
+        <Link
+          to={`/blog/${post.slug}`}
+          className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-14"
+          data-cursor="view"
+          data-cursor-label="Read"
+        >
+          <div className="overflow-hidden rounded-sm">
+            <RevealMedia src={coverFor(post)} alt={post.title} ratio="16 / 10" parallax={18} className="rounded-sm" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="rounded-full border border-gold/40 px-3 py-1 font-sans text-[0.5625rem] uppercase tracking-[0.2em] text-gold-light">
+                Featured
+              </span>
+              <span className="eyebrow">{categoryLabel(post.category)}</span>
             </div>
-
-            {/* Content Side */}
-            <div className="p-6 sm:p-10 lg:py-16 flex flex-col justify-center font-sans">
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
-                <span className="px-2 py-0.5 text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary rounded-sm">
-                  {categories.find((c) => c.id === post.category)?.label || post.category}
-                </span>
-                <span className="flex items-center gap-1 text-xs">
-                  <Calendar size={13} />
-                  {new Date(post.published_at || Date.now()).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-                <span className="w-1 h-1 rounded-full bg-primary" />
-                <span className="flex items-center gap-1 text-xs">
-                  <Clock size={13} />
-                  {post.read_time}
-                </span>
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-4 group-hover:text-primary transition-colors leading-tight">
-                {post.title}
-              </h2>
-
-              <p className="text-muted-foreground mb-6 leading-relaxed text-sm sm:text-base">
-                {post.excerpt}
-              </p>
-
-              <div className="flex items-center justify-between mt-auto">
-                <span className="text-sm text-muted-foreground">
-                  By <span className="text-primary font-medium">{post.author}</span>
-                </span>
-                <span className="inline-flex items-center text-primary font-medium group-hover:underline text-sm">
-                  Read Full Article <ArrowRight size={16} className="ml-2 transition-transform group-hover:translate-x-2" />
-                </span>
-              </div>
+            <h2 className="mt-6 font-display text-[2rem] leading-[1.15] transition-colors duration-500 group-hover:text-gold-light sm:text-[2.6rem]">
+              {post.title}
+            </h2>
+            <p className="mt-5 font-sans text-sm leading-[1.9] text-muted-foreground">{post.excerpt}</p>
+            <div className="mt-7 flex items-center gap-5 font-sans text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <Calendar size={12} className="text-gold" /> {formatDate(post.published_at)}
+              </span>
+              <span className="flex items-center gap-2">
+                <Clock size={12} className="text-gold" /> {post.read_time || "4 min read"}
+              </span>
             </div>
-          </article>
+          </div>
         </Link>
-      </AnimatedSection>
-    </section>
+      </article>
+    </Reveal>
   );
 }
 
-// Social Share Component
-function SocialShare({ title, slug }: { title: string; slug: string }) {
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/blog/${slug}` : '';
-  const encodedTitle = encodeURIComponent(title);
+/* ───────────────────────── share ───────────────────────── */
 
-  const shareLinks = [
-    {
-      name: "WhatsApp",
-      icon: MessageCircle,
-      url: `https://wa.me/?text=${encodedTitle}%20${shareUrl}`,
-    },
-    {
-      name: "Facebook",
-      icon: Facebook,
-      url: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
-    },
-    {
-      name: "Instagram",
-      icon: Instagram,
-      url: `https://instagram.com/b1touch_artistry`,
-    },
+function SocialShare({ title, slug }: { title: string; slug: string }) {
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/blog/${slug}` : "";
+  const encoded = `${encodeURIComponent(title)}%20${shareUrl}`;
+
+  const links = [
+    { name: "WhatsApp", icon: MessageCircle, url: `https://wa.me/?text=${encoded}` },
+    { name: "Facebook", icon: Facebook, url: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}` },
+    { name: "Instagram", icon: Instagram, url: "https://instagram.com/b1touchartistry" },
   ];
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-sans">
-        <Share2 size={14} />
-        Share:
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="flex items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
+        <Share2 size={13} className="text-gold" /> Share
       </span>
-      <div className="flex gap-2">
-        {shareLinks.map((social) => (
-          <a
-            key={social.name}
-            href={social.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
-            aria-label={`Share on ${social.name}`}
-          >
-            <social.icon size={14} />
-          </a>
-        ))}
-      </div>
+      {links.map((link) => (
+        <a
+          key={link.name}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Share on ${link.name}`}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 text-muted-foreground transition-all duration-500 hover:-translate-y-0.5 hover:border-gold/50 hover:text-gold"
+        >
+          <link.icon size={14} />
+        </a>
+      ))}
     </div>
   );
 }
 
-// Individual Blog Post View
-function BlogPostView() {
+/* ───────────────────────── article ───────────────────────── */
+
+function ArticleView() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+
   const [post, setPost] = useState<BlogPostItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [commentName, setCommentName] = useState('');
-  const [commentEmail, setCommentEmail] = useState('');
-  const [commentText, setCommentText] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentName, setCommentName] = useState("");
+  const [commentEmail, setCommentEmail] = useState("");
+  const [commentText, setCommentText] = useState("");
+  const [posting, setPosting] = useState(false);
 
   useEffect(() => {
-    async function loadPost() {
+    let cancelled = false;
+
+    const load = async () => {
       if (!slug) return;
       setLoading(true);
       try {
         const res = await api.blog.get(slug);
-        if (res.success && res.data) {
+        if (!cancelled && res.success && res.data) {
           setPost(res.data);
         } else {
-          // Fallback
-          const fb = fallbackBlogPosts.find((p) => p.slug === slug);
-          if (fb) {
-            setPost({
-              id: fb.id,
-              slug: fb.slug,
-              title: fb.title,
-              excerpt: fb.excerpt,
-              content: fb.content,
-              category: fb.category,
-              author: fb.author,
-              read_time: fb.readTime,
-              is_featured: fb.isFeatured ? 1 : 0,
-              published_at: fb.date,
-              comments: [],
-            });
+          const fallback = fallbackBlogPosts.find((entry) => entry.slug === slug);
+          if (!cancelled) {
+            setPost(
+              fallback
+                ? {
+                    id: fallback.id,
+                    slug: fallback.slug,
+                    title: fallback.title,
+                    excerpt: fallback.excerpt,
+                    content: fallback.content,
+                    category: fallback.category,
+                    author: fallback.author,
+                    featured_image: fallback.featuredImage,
+                    read_time: fallback.readTime,
+                    is_featured: fallback.isFeatured ? 1 : 0,
+                    published_at: fallback.date,
+                    comments: [],
+                  }
+                : null
+            );
           }
         }
       } catch {
-        // ignore
+        const fallback = fallbackBlogPosts.find((entry) => entry.slug === slug);
+        if (!cancelled && fallback) {
+          setPost({
+            id: fallback.id,
+            slug: fallback.slug,
+            title: fallback.title,
+            excerpt: fallback.excerpt,
+            content: fallback.content,
+            category: fallback.category,
+            author: fallback.author,
+            featured_image: fallback.featuredImage,
+            read_time: fallback.readTime,
+            is_featured: fallback.isFeatured ? 1 : 0,
+            published_at: fallback.date,
+            comments: [],
+          });
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
-    loadPost();
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentName.trim() || !commentText.trim() || !slug) return;
+  const related = useMemo(() => {
+    if (!post) return [] as BlogPostItem[];
+    return fallbackBlogPosts
+      .filter((entry) => entry.slug !== post.slug)
+      .slice(0, 3)
+      .map((entry, index) => ({
+        id: entry.id,
+        slug: entry.slug,
+        title: entry.title,
+        excerpt: entry.excerpt,
+        content: entry.content,
+        category: entry.category,
+        author: entry.author,
+        featured_image: entry.featuredImage,
+        read_time: entry.readTime,
+        is_featured: entry.isFeatured ? 1 : 0,
+        published_at: entry.date,
+        comments: [],
+      })) as BlogPostItem[];
+  }, [post]);
 
-    setSubmittingComment(true);
+  const handleComment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!slug) return;
+
+    if (!commentName.trim() || !commentText.trim()) {
+      toast({
+        title: "Add your name and comment",
+        description: "Both fields are needed before we can post your thoughts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPosting(true);
     try {
-      const res = await api.blog.addComment(slug, commentName, commentText, commentEmail);
+      const res = await api.blog.addComment(slug, commentName.trim(), commentText.trim(), commentEmail.trim());
       if (res.success && res.data) {
-        toast({ title: "Comment Posted! ✨", description: "Thank you for contributing to the discussion." });
-        setPost((prev) => {
-          if (!prev) return prev;
-          const comments = prev.comments ? [res.data, ...prev.comments] : [res.data];
-          return { ...prev, comments };
+        toast({ title: "Comment posted", description: "Thanks for joining the conversation." });
+        setPost((previous) => {
+          if (!previous) return previous;
+          return { ...previous, comments: [res.data!, ...(previous.comments || [])] };
         });
-        setCommentName('');
-        setCommentEmail('');
-        setCommentText('');
+        setCommentName("");
+        setCommentEmail("");
+        setCommentText("");
+      } else {
+        toast({
+          title: "Comment not posted",
+          description: res.error || "Please try again in a moment.",
+          variant: "destructive",
+        });
       }
+    } catch (error) {
+      toast({
+        title: "Comment not posted",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setSubmittingComment(false);
+      setPosting(false);
     }
   };
 
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen pt-32 pb-16 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <div className="flex min-h-[70vh] items-center justify-center pt-32">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-7 w-7 animate-spin text-gold" />
+            <span className="eyebrow-muted">Opening the journal</span>
+          </div>
         </div>
       </Layout>
     );
@@ -290,347 +321,417 @@ function BlogPostView() {
   if (!post) {
     return (
       <Layout>
-        <div className="min-h-screen pt-32 pb-16 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto px-4">
-            <h1 className="text-2xl font-serif font-bold text-foreground mb-4">Post Not Found</h1>
-            <p className="text-muted-foreground text-sm mb-6">The beauty article you are looking for does not exist or has been relocated.</p>
-            <button
-              onClick={() => navigate("/blog")}
-              className="inline-flex items-center text-primary hover:underline font-sans text-sm"
-            >
-              <ChevronLeft size={16} className="mr-1" /> Back to Blog
-            </button>
+        <section className="flex min-h-[80vh] items-center pt-32 pb-20">
+          <div className="shell-tight text-center">
+            <Ornament className="mx-auto mb-8 max-w-xs" />
+            <h1 className="display-md">That article has moved</h1>
+            <p className="lede mx-auto mt-5 max-w-md text-center">
+              The piece you're looking for doesn't exist any more — the journal is still worth a browse.
+            </p>
+            <div className="mt-9 flex flex-wrap justify-center gap-4">
+              <Link to="/blog" className="btn btn-gold">
+                <ArrowLeft size={14} /> Back to the journal
+              </Link>
+              <Link to="/booking" className="btn btn-outline">
+                Book a session
+              </Link>
+            </div>
           </div>
-        </div>
+        </section>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <article className="min-h-screen pt-28 pb-16">
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back button */}
-          <AnimatedSection className="mb-8">
-            <button
-              onClick={() => navigate("/blog")}
-              className="inline-flex items-center text-xs font-sans text-muted-foreground hover:text-primary transition-colors"
-            >
-              <ChevronLeft size={16} className="mr-1" /> Back to All Articles
-            </button>
-          </AnimatedSection>
+      {/* HERO */}
+      <article>
+        <header className="relative isolate overflow-hidden pb-12 pt-36 sm:pt-40">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_55%_at_20%_0%,hsl(40_62%_62%_/_0.12),transparent_60%)]" />
+          <div className="shell-tight">
+            <Reveal variant="fade">
+              <button
+                onClick={() => navigate("/blog")}
+                className="link-draw inline-flex items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-gold-light"
+              >
+                <ArrowLeft size={13} /> All articles
+              </button>
+            </Reveal>
 
-          {/* Header */}
-          <AnimatedSection delay={0.1}>
-            <header className="mb-10 font-sans">
-              <div className="flex flex-wrap items-center gap-3 mb-4 text-xs">
-                <span className="px-3 py-1 font-medium uppercase tracking-wider bg-primary/10 text-primary rounded-sm">
-                  {categories.find((c) => c.id === post.category)?.label || post.category}
+            <Reveal variant="fade" delay={0.08}>
+              <div className="mt-8 flex flex-wrap items-center gap-5">
+                <span className="eyebrow">{categoryLabel(post.category)}</span>
+                <span className="flex items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
+                  <Calendar size={12} className="text-gold" /> {formatDate(post.published_at)}
                 </span>
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Calendar size={13} />
-                  {new Date(post.published_at || Date.now()).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Clock size={13} />
-                  {post.read_time}
+                <span className="flex items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
+                  <Clock size={12} className="text-gold" /> {post.read_time || "4 min read"}
                 </span>
               </div>
+            </Reveal>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-foreground leading-tight mb-6">
-                {post.title}
-              </h1>
+            <SplitText
+              as="h1"
+              text={post.title}
+              className="display-md mt-6 max-w-[26ch]"
+              delay={0.2}
+              stagger={0.035}
+            />
 
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-6">
-                {post.excerpt}
-              </p>
+            {post.excerpt && (
+              <Reveal variant="up" delay={0.5}>
+                <p className="lede mt-7 max-w-2xl">{post.excerpt}</p>
+              </Reveal>
+            )}
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center">
-                    <span className="text-primary-foreground font-serif font-bold text-sm">
-                      {post.author.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{post.author}</p>
-                    <p className="text-xs text-muted-foreground">Dark Skin Beauty Specialist</p>
-                  </div>
-                </div>
+            <Reveal variant="fade" delay={0.6}>
+              <div className="mt-9 border-t border-border/70 pt-6">
                 <SocialShare title={post.title} slug={post.slug} />
               </div>
-            </header>
-          </AnimatedSection>
+            </Reveal>
+          </div>
+        </header>
 
-          {/* Featured Image placeholder */}
-          <AnimatedSection delay={0.2}>
-            <div className="relative h-64 sm:h-80 lg:h-96 bg-card border border-border rounded-sm overflow-hidden mb-12 shadow-sm">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-6xl opacity-20">✦</span>
-              </div>
-            </div>
-          </AnimatedSection>
-
-          {/* Post Content */}
-          <AnimatedSection delay={0.3}>
-            <div
-              className="blog-content prose prose-invert max-w-none text-muted-foreground text-sm sm:text-base leading-relaxed space-y-4"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+        <Reveal variant="up" delay={0.15}>
+          <div className="shell-tight">
+            <RevealMedia
+              src={coverFor(post)}
+              alt={post.title}
+              ratio="16 / 9"
+              parallax={20}
+              className="rounded-sm"
             />
-          </AnimatedSection>
+          </div>
+        </Reveal>
 
-          {/* Share Section */}
-          <AnimatedSection delay={0.4} className="mt-12 pt-8 border-t border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <p className="text-foreground font-serif font-semibold">Enjoyed this article? Share it with friends!</p>
+        {/* BODY */}
+        <section className="py-16 sm:py-20">
+          <div className="shell">
+            <Reveal variant="fade">
+              <div className="blog-content" dangerouslySetInnerHTML={{ __html: post.content }} />
+            </Reveal>
+
+            <div className="mx-auto mt-14 flex max-w-3xl flex-col gap-6 border-t border-border/70 pt-8 sm:flex-row sm:items-center sm:justify-between">
               <SocialShare title={post.title} slug={post.slug} />
+              <button
+                onClick={() => navigate("/blog")}
+                className="link-draw inline-flex items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-gold-light"
+              >
+                <ArrowLeft size={13} /> More articles
+              </button>
             </div>
-          </AnimatedSection>
+          </div>
+        </section>
 
-          {/* Comments Section */}
-          <section className="mt-16 pt-12 border-t border-border">
-            <h3 className="text-2xl font-serif font-bold text-foreground mb-6">
-              Comments ({post.comments?.length || 0})
-            </h3>
+        {/* COMMENTS */}
+        <section className="border-y border-border/60 bg-[hsl(22_13%_5%)] py-16 sm:py-20">
+          <div className="shell-tight">
+            <div className="flex items-end justify-between gap-6">
+              <h2 className="display-md">
+                The conversation
+                <span className="ml-3 numeral text-lg text-gold/70">({post.comments?.length || 0})</span>
+              </h2>
+            </div>
 
-            {/* Comment Form */}
-            <form onSubmit={handleCommentSubmit} className="p-6 bg-card border border-border rounded-sm space-y-4 mb-8 font-sans">
-              <h4 className="text-sm font-semibold text-foreground">Leave a Comment</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  required
-                  placeholder="Your Name *"
-                  value={commentName}
-                  onChange={(e) => setCommentName(e.target.value)}
-                  className="px-4 py-2.5 bg-secondary border border-border rounded-sm text-xs text-foreground focus:outline-none focus:border-primary"
-                />
-                <input
-                  type="email"
-                  placeholder="Your Email (optional)"
-                  value={commentEmail}
-                  onChange={(e) => setCommentEmail(e.target.value)}
-                  className="px-4 py-2.5 bg-secondary border border-border rounded-sm text-xs text-foreground focus:outline-none focus:border-primary"
+            <form onSubmit={handleComment} className="panel mt-9 rounded-sm p-6 sm:p-7">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="field-label" htmlFor="comment-name">
+                    Name *
+                  </label>
+                  <input
+                    id="comment-name"
+                    className="field"
+                    value={commentName}
+                    onChange={(event) => setCommentName(event.target.value)}
+                    placeholder="Your name"
+                  />
+                </div>
+                <div>
+                  <label className="field-label" htmlFor="comment-email">
+                    Email (not published)
+                  </label>
+                  <input
+                    id="comment-email"
+                    type="email"
+                    className="field"
+                    value={commentEmail}
+                    onChange={(event) => setCommentEmail(event.target.value)}
+                    placeholder="you@email.com"
+                  />
+                </div>
+              </div>
+              <div className="mt-5">
+                <label className="field-label" htmlFor="comment-text">
+                  Your comment *
+                </label>
+                <textarea
+                  id="comment-text"
+                  rows={4}
+                  className="field resize-none"
+                  value={commentText}
+                  onChange={(event) => setCommentText(event.target.value)}
+                  placeholder="Share your thoughts or ask a question…"
                 />
               </div>
-              <textarea
-                rows={3}
-                required
-                placeholder="Write your comment or question..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="w-full px-4 py-2.5 bg-secondary border border-border rounded-sm text-xs text-foreground focus:outline-none focus:border-primary resize-none"
-              />
-              <button
-                type="submit"
-                disabled={submittingComment}
-                className="px-6 py-2.5 bg-gradient-gold text-primary-foreground font-semibold text-xs rounded-sm hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
-              >
-                {submittingComment ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                Post Comment
-              </button>
+              <div className="mt-6 flex justify-end">
+                <button type="submit" disabled={posting} className="btn btn-gold btn-sm shine">
+                  {posting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                  {posting ? "Posting" : "Post comment"}
+                </button>
+              </div>
             </form>
 
-            {/* Existing Comments List */}
-            <div className="space-y-4">
-              {post.comments && post.comments.length > 0 ? (
-                post.comments.map((c) => (
-                  <div key={c.id} className="p-4 bg-card border border-border rounded-sm font-sans">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-foreground text-xs">{c.author_name}</span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(c.created_at).toLocaleDateString()}
+            <div className="mt-10 space-y-5">
+              <AnimatePresence initial={false}>
+                {(post.comments || []).map((comment) => (
+                  <motion.div
+                    key={comment.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="rounded-sm border border-border/70 bg-[hsl(22_13%_6%)] p-6"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/15 font-display text-sm text-gold-light">
+                        {comment.author_name?.charAt(0)?.toUpperCase() || "B"}
                       </span>
+                      <div>
+                        <div className="font-sans text-sm text-foreground">{comment.author_name}</div>
+                        <div className="font-sans text-[0.6875rem] text-muted-foreground">
+                          {formatDate(comment.created_at)}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{c.comment}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground font-sans">No comments yet. Be the first to share your thoughts!</p>
+                    <p className="mt-4 font-sans text-sm leading-[1.85] text-muted-foreground">
+                      {comment.comment}
+                    </p>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {!(post.comments || []).length && (
+                <p className="rounded-sm border border-dashed border-border/70 py-10 text-center font-sans text-sm text-muted-foreground">
+                  No comments yet — be the first to share your thoughts.
+                </p>
               )}
             </div>
+          </div>
+        </section>
+
+        {/* RELATED */}
+        {related.length > 0 && (
+          <section className="py-16 sm:py-20">
+            <div className="shell">
+              <div className="flex items-end justify-between gap-6">
+                <h2 className="display-md">More from the journal</h2>
+                <Link
+                  to="/blog"
+                  className="link-draw hidden items-center gap-2 font-sans text-[0.6875rem] uppercase tracking-[0.2em] text-gold-light sm:inline-flex"
+                >
+                  All articles <ArrowUpRight size={13} />
+                </Link>
+              </div>
+              <div className="mt-12 grid gap-8 md:grid-cols-3">
+                {related.map((item, index) => (
+                  <PostCard key={item.id} post={item} index={index} />
+                ))}
+              </div>
+            </div>
           </section>
-        </div>
+        )}
       </article>
     </Layout>
   );
 }
 
-// Blog Listing Page
-function BlogListing() {
+/* ───────────────────────── index ───────────────────────── */
+
+function JournalIndex() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [posts, setPosts] = useState<BlogPostItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadPosts = async () => {
-    setLoading(true);
-    try {
-      const res = await api.blog.list(activeCategory, search);
-      if (res.success && res.data && res.data.length > 0) {
-        setPosts(res.data);
-      } else {
-        // Fallback
-        let list = fallbackBlogPosts.map((p) => ({
-          id: p.id,
-          slug: p.slug,
-          title: p.title,
-          excerpt: p.excerpt,
-          content: p.content,
-          category: p.category,
-          author: p.author,
-          read_time: p.readTime,
-          is_featured: p.isFeatured ? 1 : 0,
-          published_at: p.date,
-        }));
-        if (activeCategory !== 'all') {
-          list = list.filter((p) => p.category === activeCategory);
-        }
-        if (search.trim()) {
-          const s = search.toLowerCase();
-          list = list.filter((p) => p.title.toLowerCase().includes(s) || p.excerpt.toLowerCase().includes(s));
-        }
-        setPosts(list);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  };
+  const localFallback = (): BlogPostItem[] =>
+    fallbackBlogPosts.map((entry) => ({
+      id: entry.id,
+      slug: entry.slug,
+      title: entry.title,
+      excerpt: entry.excerpt,
+      content: entry.content,
+      category: entry.category,
+      author: entry.author,
+      featured_image: entry.featuredImage,
+      read_time: entry.readTime,
+      is_featured: entry.isFeatured ? 1 : 0,
+      published_at: entry.date,
+    }));
 
   useEffect(() => {
-    loadPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCategory]);
+    let cancelled = false;
 
-  const featuredPost = posts.find((p) => p.is_featured);
-  const postsToShow = activeCategory === "all" && featuredPost && !search
-    ? posts.filter((p) => p.id !== featuredPost.id)
-    : posts;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await api.blog.list(activeCategory, search);
+        let list: BlogPostItem[] = res.success && res.data && res.data.length > 0 ? res.data : localFallback();
+
+        if (activeCategory !== "all") list = list.filter((post) => post.category === activeCategory);
+        if (search.trim()) {
+          const needle = search.trim().toLowerCase();
+          list = list.filter(
+            (post) =>
+              post.title.toLowerCase().includes(needle) || post.excerpt.toLowerCase().includes(needle)
+          );
+        }
+
+        if (!cancelled) setPosts(list);
+      } catch {
+        if (!cancelled) setPosts(localFallback());
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    const timer = window.setTimeout(load, 180);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [activeCategory, search]);
+
+  const featured = posts.find((post) => post.is_featured) || posts[0];
+  const rest = posts.filter((post) => post.id !== featured?.id);
 
   return (
     <Layout>
-      <div className="min-h-screen pt-24 pb-16">
-        {/* Hero Section */}
-        <section className="section-padding pb-8 relative">
-          <GoldParticles count={15} className="opacity-50" />
-          <div className="container-narrow mx-auto px-4">
-            <AnimatedSection>
-              <div className="text-center mb-6">
-                <span className="text-xs font-sans font-semibold uppercase tracking-[0.3em] text-primary mb-3 block">
-                  Beauty & Inspiration
-                </span>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4">
-                  The B1touch <span className="text-gradient-gold">Blog</span>
-                </h1>
-                <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed font-sans">
-                  Expert advice, tutorials, and trend insights from Lagos' premier makeup artistry studio.
-                  Celebrating melanin-rich skin beauty one look at a time.
-                </p>
-              </div>
-
-              {/* Search Bar */}
-              <div className="max-w-md mx-auto mb-10">
-                <div className="relative">
-                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && loadPosts()}
-                    placeholder="Search beauty tutorials, bridal advice..."
-                    className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-sm text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors shadow-sm font-sans"
-                  />
-                </div>
-              </div>
-            </AnimatedSection>
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden pb-12 pt-36 sm:pt-40">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_55%_at_80%_0%,hsl(40_62%_62%_/_0.12),transparent_60%)]" />
+        <div className="shell">
+          <Reveal variant="fade">
+            <SectionIndex index="01" label="The journal" className="mb-8" />
+          </Reveal>
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <SplitText
+              as="h1"
+              text="Beauty notes from the studio"
+              highlightFrom={2}
+              className="display-lg max-w-[20ch]"
+              delay={0.15}
+            />
+            <Reveal variant="up" delay={0.5}>
+              <p className="lede max-w-lg">
+                Technique, product honesty and bridal timelines — written by the people holding the brush.
+              </p>
+            </Reveal>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Featured Post */}
-        {activeCategory === "all" && featuredPost && !search && (
-          <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
-            <FeaturedPost post={featuredPost} />
+      {/* CONTROLS */}
+      <section className="sticky top-[4.5rem] z-[800] border-y border-border/60 bg-[hsl(20_14%_4%_/_0.88)] py-4 backdrop-blur-xl lg:top-20">
+        <div className="shell flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {categories.map((category) => {
+              const active = activeCategory === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  aria-pressed={active}
+                  className={`shrink-0 rounded-full border px-4 py-2 font-sans text-[0.625rem] uppercase tracking-[0.18em] transition-all duration-500 ease-expo ${
+                    active
+                      ? "border-transparent bg-gradient-gold text-primary-foreground"
+                      : "border-border/80 text-muted-foreground hover:border-gold/40 hover:text-gold-light"
+                  }`}
+                >
+                  {category.label}
+                </button>
+              );
+            })}
           </div>
-        )}
 
-        {/* Category Filter */}
-        <section className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-          <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-4 py-2 text-xs font-sans font-medium uppercase tracking-wider rounded-sm transition-all duration-200 ${
-                  activeCategory === cat.id
-                    ? "bg-gradient-gold text-primary-foreground font-semibold shadow-sm"
-                    : "bg-card border border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="relative w-full lg:w-72">
+            <Search size={14} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gold/70" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search articles"
+              aria-label="Search articles"
+              className="field py-3 pl-10 text-xs"
+            />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Blog Grid */}
-        <section className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
+      {/* LIST */}
+      <section className="py-14 sm:py-20">
+        <div className="shell">
           {loading ? (
-            <div className="py-20 text-center text-muted-foreground">
-              <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-2" />
-              <p className="text-xs font-sans">Loading articles...</p>
+            <div className="flex flex-col items-center gap-4 py-24">
+              <Loader2 className="h-7 w-7 animate-spin text-gold" />
+              <span className="eyebrow-muted">Loading the journal</span>
             </div>
-          ) : postsToShow.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {postsToShow.map((post, index) => (
-                <BlogCard key={post.id} post={post} index={index} />
-              ))}
+          ) : posts.length === 0 ? (
+            <div className="rounded-sm border border-dashed border-border/70 py-24 text-center">
+              <Ornament className="mx-auto mb-6 max-w-[8rem]" />
+              <h2 className="font-display text-2xl">Nothing matches that search</h2>
+              <p className="mx-auto mt-3 max-w-sm font-sans text-sm text-muted-foreground">
+                Try a different keyword, or browse all articles.
+              </p>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setActiveCategory("all");
+                }}
+                className="btn btn-outline btn-sm mt-7"
+              >
+                Clear filters
+              </button>
             </div>
           ) : (
-            <div className="text-center py-16 bg-card border border-border rounded-sm max-w-md mx-auto">
-              <p className="text-muted-foreground text-sm font-serif mb-2">No articles found</p>
-              <p className="text-xs text-muted-foreground font-sans">Try selecting another category or clear your search query.</p>
-            </div>
-          )}
-        </section>
+            <>
+              {featured && activeCategory === "all" && !search && (
+                <div className="mb-16 sm:mb-20">
+                  <FeaturedPost post={featured} />
+                </div>
+              )}
 
-        {/* Newsletter CTA */}
-        <section className="mt-20">
-          <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-card border border-border rounded-sm p-8 sm:p-12 text-center relative overflow-hidden shadow-md">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-              <div className="relative z-10 max-w-xl mx-auto">
-                <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-primary mb-2 block">
-                  Join the VIP Glam Circle
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-3">
-                  Never Miss a Beauty Tip
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-6 font-sans leading-relaxed">
-                  Subscribe to our monthly newsletter for seasonal bridal trends, skincare prep secrets, and exclusive discount codes.
-                </p>
-                <NewsletterForm source="blog_page" />
+              <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+                {(activeCategory === "all" && !search ? rest : posts).map((post, index) => (
+                  <PostCard key={post.id} post={post} index={index} />
+                ))}
               </div>
-            </div>
-          </div>
-        </section>
-      </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative isolate overflow-hidden border-t border-border/60 py-20 sm:py-28">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_60%_at_50%_100%,hsl(40_62%_62%_/_0.16),transparent_65%)]" />
+        <div className="shell text-center">
+          <SplitText as="h2" text="Put the reading into practice" className="display-md mx-auto max-w-[22ch]" highlightFrom={4} />
+          <Reveal variant="up" delay={0.25} className="mt-9 flex flex-wrap justify-center gap-4">
+            <Magnetic strength={0.2}>
+              <Link to="/booking" className="btn btn-gold shine">
+                Book your session
+                <ArrowUpRight size={14} />
+              </Link>
+            </Magnetic>
+            <Link to="/services" className="btn btn-outline">
+              See services & pricing
+            </Link>
+          </Reveal>
+        </div>
+      </section>
     </Layout>
   );
 }
 
-// Main Blog Component
 export default function Blog() {
-  const { slug } = useParams();
-  if (slug) {
-    return <BlogPostView />;
-  }
-  return <BlogListing />;
+  const { slug } = useParams<{ slug?: string }>();
+  return slug ? <ArticleView /> : <JournalIndex />;
 }

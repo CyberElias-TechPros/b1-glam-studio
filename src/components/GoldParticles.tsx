@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { useInView } from "framer-motion";
 
@@ -153,7 +153,5 @@ export function FloatingGoldElement({
   );
 }
 
-// import ref for the useRef hook
-import { useRef } from "react";
 
 export default GoldParticles;

@@ -126,6 +126,12 @@ export interface DashboardStats {
 
 // Determine API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+/**
+ * With no configured backend the studio runs on its local store. Skipping the
+ * network entirely keeps the console clean and every flow instant instead of
+ * waiting on a request that can only 404.
+ */
+const HAS_REMOTE_API = API_BASE_URL.length > 0;
 
 // In-memory / localStorage fallback storage for offline resilience
 const LOCAL_STORAGE_KEY = 'b1_local_db_v1';
@@ -166,7 +172,7 @@ function getLocalDb() {
       address: 'Addo Road, Ajah, Lagos, Nigeria',
       hours_weekday: 'Mon – Sat: 9:00 AM – 7:00 PM',
       hours_sunday: 'Sunday: By Appointment Only',
-      instagram: 'https://instagram.com/b1touch_artistry',
+      instagram: 'https://instagram.com/b1touchartistry',
       facebook: 'https://facebook.com/b1touchartistry',
     } as StudioSettings,
   };
@@ -196,6 +202,10 @@ async function request<T>(
   }
 
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+
+  if (!HAS_REMOTE_API && !endpoint.startsWith('http')) {
+    return { success: false, error: 'Studio API is not configured — using the local studio store.' };
+  }
 
   try {
     const res = await fetch(url, {
@@ -325,6 +335,8 @@ export const api = {
       eventType?: string;
       address?: string;
       notes?: string;
+      /** Studio-computed estimate; the worker prices the booking server-side. */
+      servicePrice?: number;
     }) {
       const res = await request<{
         id: string;
@@ -352,6 +364,17 @@ export const api = {
         randomCode += chars[Math.floor(Math.random() * chars.length)];
       }
       const ref = `B1-${new Date().getFullYear()}-${randomCode}`;
+      const catalogue: Record<string, number> = {
+        'Bridal Makeup': 225000,
+        'Owambe / Event Glam': 100000,
+        'Editorial & Photoshoot': 150000,
+        'Birthday Glam': 125000,
+        'Film & TV Makeup': 250000,
+        'Makeup Masterclass': 400000,
+      };
+      const pricedService =
+        payload.servicePrice ??
+        (catalogue[payload.service] ?? 100000) + (payload.locationType === 'home' ? 50000 : 0);
       const newBooking: Booking = {
         id: `bk-${Date.now()}`,
         reference_code: ref,
@@ -360,7 +383,7 @@ export const api = {
         email: payload.email || null,
         instagram: payload.instagram || null,
         service: payload.service,
-        service_price: payload.locationType === 'home' ? 150000 : 100000,
+        service_price: pricedService,
         booking_date: payload.bookingDate,
         booking_time: payload.bookingTime || '10:00 AM',
         location_type: payload.locationType || 'studio',
@@ -407,9 +430,11 @@ export const api = {
 
       // Local fallback
       const db = getLocalDb();
-      const found = db.bookings.find(
-        (b: Booking) => b.reference_code.toUpperCase() === code.trim().toUpperCase()
-      );
+      const wanted = code.trim().toUpperCase();
+      const found = db.bookings.find((b: Booking & { referenceCode?: string }) => {
+        const stored = String(b.reference_code ?? b.referenceCode ?? '');
+        return stored.toUpperCase() === wanted;
+      });
       if (found) return { success: true, data: found };
       return { success: false, error: `No booking found with reference code "${code}"` };
     },
@@ -575,7 +600,7 @@ export const api = {
         });
         saveLocalDb(db);
       }
-      return { success: true, message: 'Thank you for subscribing! ✨' };
+      return { success: true, message: 'Thank you for subscribing!' };
     },
 
     async list() {

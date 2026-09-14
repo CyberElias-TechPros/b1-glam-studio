@@ -1,30 +1,41 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, Quote, ArrowRight, MessageSquarePlus, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowUpRight, MessageSquarePlus, Quote, Star } from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, GoldDivider } from "@/components/AnimatedSection";
-import { api, Testimonial } from "@/lib/api";
 import { ReviewModal } from "@/components/ReviewModal";
+import { api, Testimonial } from "@/lib/api";
+import { getImages } from "@/lib/portfolioImages";
+import {
+  Counter,
+  Magnetic,
+  Ornament,
+  Reveal,
+  RevealMedia,
+  SectionIndex,
+  SplitText,
+} from "@/components/motion/Reveal";
 
-const fallbackTestimonials = [
+const fallbackTestimonials: Testimonial[] = [
   {
     id: "fb-1",
     name: "Adaeze Nwankwo",
     event_type: "Traditional Wedding",
     rating: 5,
-    quote: "B1touch made me feel like absolute royalty on my wedding day. My skin looked flawless in every single photo — even the close-ups! I cried tears of joy and my makeup didn't budge. This is the standard.",
+    quote:
+      "B1touch made me feel like absolute royalty on my wedding day. My skin looked flawless in every single photo — even the close-ups. I cried tears of joy and my makeup didn't budge.",
     is_featured: 1,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-01",
   },
   {
     id: "fb-2",
     name: "Funke Adeyemi",
-    event_type: "30th Birthday Celebration",
+    event_type: "30th Birthday",
     rating: 5,
-    quote: "I've never received so many compliments in my life! The makeup lasted through 8 hours of dancing, photos, and celebration. Everyone kept asking who my MUA was. B1touch is simply the best in Lagos.",
+    quote:
+      "I've never received so many compliments in my life. The makeup lasted through eight hours of dancing, photos and celebration — everyone kept asking who my MUA was.",
     is_featured: 1,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-05",
   },
   {
@@ -32,9 +43,10 @@ const fallbackTestimonials = [
     name: "Chidinma Okafor",
     event_type: "Owambe Guest",
     rating: 5,
-    quote: "Finally, a makeup artist who truly understands dark skin tones. No ashy foundation, no mismatched tones — just pure perfection. I'm a client for life now. Every party, every event, it's B1touch or nothing.",
+    quote:
+      "Finally, a makeup artist who truly understands dark skin tones. No ashy foundation, no mismatched tones — just pure perfection. I'm a client for life.",
     is_featured: 1,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-10",
   },
   {
@@ -42,9 +54,10 @@ const fallbackTestimonials = [
     name: "Blessing Eze",
     event_type: "White Wedding",
     rating: 5,
-    quote: "From the trial session to the big day, the experience was seamless. She listened to exactly what I wanted and delivered beyond my expectations. My husband couldn't stop staring!",
+    quote:
+      "From the trial to the big day, the experience was seamless. She listened to exactly what I wanted and delivered beyond my expectations.",
     is_featured: 0,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-12",
   },
   {
@@ -52,9 +65,10 @@ const fallbackTestimonials = [
     name: "Yewande Bakare",
     event_type: "Editorial Photoshoot",
     rating: 5,
-    quote: "Working with B1touch on my portfolio shoot was incredible. She understood the brief perfectly and created looks that were both editorial and wearable. The photographer was impressed too!",
+    quote:
+      "Working with B1touch on my portfolio shoot was incredible. She understood the brief perfectly and created looks that were both editorial and wearable. The photographer was impressed.",
     is_featured: 0,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-14",
   },
   {
@@ -62,9 +76,10 @@ const fallbackTestimonials = [
     name: "Amara Chukwu",
     event_type: "Bridal Train",
     rating: 5,
-    quote: "Our entire bridal train of 8 ladies looked absolutely stunning. She was professional, punctual, and made each of us feel special. The coordination was flawless despite the tight timeline.",
+    quote:
+      "Our entire bridal train of eight ladies looked stunning. Professional, punctual, and she made each of us feel special despite the tight timeline.",
     is_featured: 0,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-16",
   },
   {
@@ -72,9 +87,10 @@ const fallbackTestimonials = [
     name: "Ngozi Obi",
     event_type: "Engagement Party",
     rating: 5,
-    quote: "The way she matched my foundation perfectly to my dark chocolate skin — I was amazed. Most artists struggle with my tone, but B1touch nailed it first try. Incredible talent!",
+    quote:
+      "The way she matched my foundation to my dark chocolate skin — I was amazed. Most artists struggle with my tone; B1touch nailed it first try.",
     is_featured: 0,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-18",
   },
   {
@@ -82,25 +98,39 @@ const fallbackTestimonials = [
     name: "Kemi Afolabi",
     event_type: "Content Creation",
     rating: 5,
-    quote: "As a content creator, I need looks that pop on camera. B1touch delivers every single time. She's fast, skilled, and always brings fresh ideas. My Instagram feed has never looked better!",
+    quote:
+      "As a content creator I need looks that pop on camera. B1touch delivers every single time — fast, skilled and always bringing fresh ideas.",
     is_featured: 0,
-    status: "approved" as const,
+    status: "approved",
     created_at: "2026-02-20",
   },
 ];
 
+function StarRating({ rating, size = 13 }: { rating: number; size?: number }) {
+  return (
+    <div className="flex gap-1" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          size={size}
+          className={star <= rating ? "fill-gold text-gold" : "text-muted-foreground/40"}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function Testimonials() {
   const [reviews, setReviews] = useState<Testimonial[]>(fallbackTestimonials);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const heroImage = useMemo(() => getImages(1, 22)[0], []);
 
   const loadReviews = async () => {
     try {
       const res = await api.testimonials.getApproved();
-      if (res.success && res.data && res.data.length > 0) {
-        setReviews(res.data);
-      }
+      if (res.success && res.data && res.data.length > 0) setReviews(res.data);
     } catch {
-      // Keep fallback
+      /* keep the curated fallback */
     }
   };
 
@@ -108,128 +138,167 @@ export default function Testimonials() {
     loadReviews();
   }, []);
 
-  const featured = reviews.find((r) => r.is_featured) || reviews[0];
+  const featured = reviews.find((review) => review.is_featured) || reviews[0];
+  const rest = reviews.filter((review) => review.id !== featured?.id);
+  const average = reviews.length
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+    : "5.0";
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="pt-32 pb-16 bg-secondary">
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <AnimatedSection>
-            <span className="text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-4 block">
-              Testimonials & Reviews
-            </span>
-            <h1 className="text-4xl sm:text-5xl font-serif font-bold mb-4">
-              Words from Our <span className="text-gradient-gold">Queens</span>
-            </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-              Real experiences from brides, event guests, and clients across Lagos who trust B1touch Artistry for their special moments.
-            </p>
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden pb-16 pt-36 sm:pt-40">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_55%_at_15%_0%,hsl(40_62%_62%_/_0.13),transparent_60%)]" />
+        <div className="shell grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+          <div>
+            <Reveal variant="fade">
+              <SectionIndex index="01" label="Testimonials" className="mb-8" />
+            </Reveal>
+            <SplitText
+              as="h1"
+              text="Words from our queens"
+              highlightFrom={3}
+              className="display-lg max-w-[16ch]"
+              delay={0.15}
+            />
+            <Reveal variant="up" delay={0.55}>
+              <p className="lede mt-7 max-w-xl">
+                Brides, celebrants, creatives and bridal trains across Lagos — in their own words.
+              </p>
+            </Reveal>
+            <Reveal variant="up" delay={0.65} className="mt-9">
+              <Magnetic strength={0.2}>
+                <button onClick={() => setModalOpen(true)} className="btn btn-gold shine">
+                  <MessageSquarePlus size={15} />
+                  Share your review
+                </button>
+              </Magnetic>
+            </Reveal>
+          </div>
 
-            <div className="mt-8 flex justify-center">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 text-xs font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm hover:opacity-90 transition-opacity shadow-md"
-              >
-                <MessageSquarePlus size={16} />
-                Share Your Review
-              </button>
+          <Reveal variant="scale" delay={0.35}>
+            <div className="panel rounded-sm p-7">
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="numeral text-5xl text-gradient-gold">
+                    <Counter value={Number(average)} />
+                  </div>
+                  <p className="eyebrow-muted mt-3">Average client rating</p>
+                </div>
+                <StarRating rating={5} size={15} />
+              </div>
+              <div className="mt-7 grid grid-cols-2 gap-5 border-t border-border/70 pt-6">
+                <div>
+                  <div className="numeral text-2xl text-foreground">
+                    <Counter value={reviews.length} suffix="+" />
+                  </div>
+                  <p className="eyebrow-muted mt-2">Verified reviews</p>
+                </div>
+                <div>
+                  <div className="numeral text-2xl text-foreground">
+                    <Counter value={1000} suffix="+" />
+                  </div>
+                  <p className="eyebrow-muted mt-2">Clients styled</p>
+                </div>
+              </div>
             </div>
-          </AnimatedSection>
+          </Reveal>
         </div>
       </section>
 
-      {/* Featured Testimonial */}
+      {/* FEATURED QUOTE */}
       {featured && (
-        <section className="py-16 bg-background">
-          <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8">
-            <AnimatedSection>
-              <div className="max-w-3xl mx-auto text-center p-8 sm:p-12 bg-card border border-border rounded-sm relative shadow-md">
-                <Quote className="w-10 h-10 text-primary/30 mx-auto mb-6" />
-                <p className="text-lg sm:text-xl font-serif italic text-foreground leading-relaxed mb-8">
-                  "{featured.quote}"
-                </p>
-                <div className="flex gap-1 justify-center mb-3">
-                  {[...Array(featured.rating || 5)].map((_, i) => (
-                    <Star key={i} size={16} className="fill-primary text-primary" />
-                  ))}
+        <section className="border-y border-border/60 bg-[hsl(22_13%_5%)] py-20 sm:py-24">
+          <div className="shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16">
+            <Reveal variant="scale">
+              <RevealMedia
+                src={heroImage}
+                alt="B1touch Artistry client look"
+                ratio="4 / 5"
+                parallax={22}
+                className="rounded-sm lg:max-w-sm"
+              />
+            </Reveal>
+            <Reveal variant="up" delay={0.15}>
+              <Quote className="h-9 w-9 text-gold/40" />
+              <blockquote className="mt-7 font-display text-[1.6rem] leading-[1.5] text-foreground/92 sm:text-[2rem]">
+                {featured.quote}
+              </blockquote>
+              <div className="mt-9 flex flex-wrap items-center gap-5">
+                <StarRating rating={featured.rating} size={15} />
+                <div>
+                  <div className="font-display text-lg">{featured.name}</div>
+                  <div className="eyebrow-muted mt-1">{featured.event_type}</div>
                 </div>
-                <p className="font-serif font-semibold text-foreground">{featured.name}</p>
-                <p className="text-xs text-primary uppercase tracking-wider font-sans">{featured.event_type}</p>
               </div>
-            </AnimatedSection>
+            </Reveal>
           </div>
         </section>
       )}
 
-      <GoldDivider />
+      {/* GRID */}
+      <section className="section-y">
+        <div className="shell">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <h2 className="display-md max-w-[18ch]">
+              Every review, <span className="display-italic text-gradient-gold">unfiltered</span>
+            </h2>
+            <Reveal variant="up" delay={0.15}>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="link-draw inline-flex items-center gap-2 font-sans text-sm uppercase tracking-[0.2em] text-gold-light"
+              >
+                Add yours <ArrowUpRight size={14} />
+              </button>
+            </Reveal>
+          </div>
 
-      {/* All Reviews */}
-      <section className="section-padding bg-background">
-        <div className="container-narrow mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {reviews.map((t, i) => (
-              <AnimatedSection key={t.id || t.name} delay={i * 0.05}>
-                <div className="p-6 sm:p-8 bg-card border border-border rounded-sm h-full flex flex-col hover:border-primary/40 transition-colors shadow-sm font-sans">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-1">
-                      {[...Array(t.rating || 5)].map((_, j) => (
-                        <Star key={j} size={13} className="fill-primary text-primary" />
-                      ))}
-                    </div>
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-medium">
-                      <CheckCircle2 size={12} className="text-primary" /> Verified Client
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed italic flex-1 font-serif">
-                    "{t.quote}"
-                  </p>
-                  <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-                    <div>
-                      <p className="font-serif font-semibold text-foreground text-sm">{t.name}</p>
-                      <p className="text-xs text-primary">{t.event_type}</p>
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
+          <div className="mt-14 columns-1 gap-6 sm:columns-2 lg:columns-3 [&>*]:mb-6">
+            {rest.map((review, i) => (
+              <Reveal key={review.id} variant="up" delay={Math.min(i, 6) * 0.06} className="break-inside-avoid">
+                <figure className="panel rounded-sm p-7">
+                  <StarRating rating={review.rating} />
+                  <blockquote className="mt-5 font-sans text-sm leading-[1.9] text-muted-foreground">
+                    {review.quote}
+                  </blockquote>
+                  <figcaption className="mt-6 border-t border-border/70 pt-4">
+                    <span className="font-display text-lg">{review.name}</span>
+                    <span className="eyebrow-muted mt-1.5 block">{review.event_type}</span>
+                  </figcaption>
+                </figure>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-secondary">
-        <div className="container-narrow mx-auto px-4 text-center">
-          <AnimatedSection>
-            <h2 className="text-2xl sm:text-3xl font-serif font-bold mb-4">
-              Join Our Family of Happy Clients
-            </h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto text-sm">
-              Your transformation story starts with a single booking.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link
-                to="/booking"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm shadow-md"
-              >
-                Book Your Session <ArrowRight size={16} />
+      <section className="relative border-t border-border/60 py-20 text-center sm:py-24">
+        <div className="shell">
+          <Reveal variant="fade">
+            <Ornament className="mx-auto mb-9 max-w-xs" />
+          </Reveal>
+          <SplitText as="h2" text="Ready to write your own?" className="display-md mx-auto max-w-[22ch]" highlightFrom={3} />
+          <Reveal variant="up" delay={0.25} className="mt-9 flex flex-wrap justify-center gap-4">
+            <Magnetic strength={0.2}>
+              <Link to="/booking" className="btn btn-gold shine">
+                Book your session
+                <ArrowUpRight size={14} />
               </Link>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-6 py-4 text-sm font-sans font-medium border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm"
-              >
-                <MessageSquarePlus size={16} /> Leave Feedback
-              </button>
-            </div>
-          </AnimatedSection>
+            </Magnetic>
+            <Link to="/portfolio" className="btn btn-outline">
+              See the work
+            </Link>
+          </Reveal>
         </div>
       </section>
 
-      {/* Submit Review Modal */}
       <ReviewModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={loadReviews}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={() => {
+          void loadReviews();
+        }}
       />
     </Layout>
   );
