@@ -33,9 +33,13 @@ export function LazyAd({ children, className = "", placeholder }: LazyAdProps) {
 
   return (
     <div ref={ref} className={className}>
-      {isVisible ? children : placeholder || (
-        <div className="bg-secondary/30 rounded-lg animate-pulse h-24" />
-      )}
+      {isVisible
+        ? children
+        : placeholder || (
+            <div className="ad-container h-[90px]">
+              <div className="absolute inset-0 animate-pulse bg-[linear-gradient(90deg,transparent,hsl(40_62%_62%_/_0.06),transparent)] bg-[length:200%_100%] animate-shimmer" />
+            </div>
+          )}
     </div>
   );
 }

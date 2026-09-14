@@ -1,33 +1,102 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, Clock, Instagram, Facebook, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
+  Facebook,
+  Instagram,
+  Loader2,
+  Mail,
+  MapPin,
+  Minus,
+  Phone,
+  Plus,
+  Send,
+} from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading } from "@/components/AnimatedSection";
 import { InstagramFeed } from "@/components/InstagramFeed";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { Magnetic, Ornament, Reveal, SectionIndex, SplitText } from "@/components/motion/Reveal";
+
+const MAP_EMBED =
+  "https://www.google.com/maps?q=Addo%20Road%2C%20Ajah%2C%20Lagos%2C%20Nigeria&output=embed";
 
 const faqs = [
-  { q: "Do you provide lashes?", a: "Yes! Lash application is included in all our makeup services. We use premium quality lashes that complement your look." },
-  { q: "How long does a session take?", a: "A standard glam session takes 1.5–2 hours. Bridal makeup with trial session takes about 2.5–3 hours." },
-  { q: "Do you offer home service?", a: "Yes, we offer home/location service across Lagos (Lekki, VI, Ikoyi, Ikeja, Ajah) at an additional fee of ₦50,000+. Perfect for brides and groups." },
-  { q: "What products do you use?", a: "We use a combination of premium brands including MAC, Fenty Beauty, Charlotte Tilbury, Black Opal, and other professional-grade products tested for melanin-rich skin." },
-  { q: "How far in advance should I book for a wedding?", a: "We recommend booking at least 2–3 months in advance for bridal services, especially during peak wedding season (November – February)." },
-  { q: "Do you offer group discounts?", a: "Yes! Groups of 5 or more for events like bridal trains or aso-ebi receive a special group rate. Contact us for custom quotes." },
+  {
+    q: "Do you provide lashes?",
+    a: "Yes — lash application is included with every makeup service. We keep a range of premium lash styles and match them to your eye shape.",
+  },
+  {
+    q: "How long does a session take?",
+    a: "A standard glam session takes 1.5–2 hours. Bridal makeup including the trial runs about 2.5–3 hours on the day.",
+  },
+  {
+    q: "Do you offer home service?",
+    a: "We travel across Lagos — Lekki, VI, Ikoyi, Ikeja and Ajah — for a ₦50,000+ location fee. Ideal for brides and groups.",
+  },
+  {
+    q: "What products do you use?",
+    a: "MAC, Fenty Beauty, Charlotte Tilbury, Black Opal and other professional-grade lines formulated and tested for melanin-rich skin.",
+  },
+  {
+    q: "How far ahead should I book for a wedding?",
+    a: "Two to three months ahead for bridal, especially in peak season (November – February). We hold dates with a deposit.",
+  },
+  {
+    q: "Do you offer group discounts?",
+    a: "Groups of five or more — bridal trains, aso-ebi parties — receive tailored group pricing. Message us for a quote.",
+  },
+];
+
+const channels = [
+  {
+    icon: Phone,
+    label: "WhatsApp / Phone",
+    value: "+234 806 165 1126",
+    href: "https://wa.me/2348061651126",
+    note: "Fastest response — usually within the hour",
+  },
+  {
+    icon: Mail,
+    label: "Email",
+    value: "info@b1touchartistry.com",
+    href: "mailto:info@b1touchartistry.com",
+    note: "Best for briefs, invoices and masterclass enquiries",
+  },
+  {
+    icon: MapPin,
+    label: "Studio",
+    value: "Addo Road, Ajah, Lagos",
+    href: "https://www.google.com/maps?q=Addo+Road,+Ajah,+Lagos",
+    note: "Street parking available · arrive 10 minutes early",
+  },
+  {
+    icon: Clock,
+    label: "Studio hours",
+    value: "Mon – Sat · 9AM – 7PM",
+    href: null,
+    note: "Sundays by appointment only",
+  },
 ];
 
 export default function Contact() {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [sentSuccess, setSentSuccess] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [sent, setSent] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const update = (key: keyof typeof form, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     if (!form.name.trim() || !form.message.trim()) {
       toast({
-        title: "Please fill in all required fields",
-        description: "Your name and message are required.",
+        title: "Please fill in the required fields",
+        description: "Your name and message are needed before we can reply.",
         variant: "destructive",
       });
       return;
@@ -36,31 +105,31 @@ export default function Contact() {
     setSubmitting(true);
     try {
       const res = await api.contact.send({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        subject: form.subject || 'Website Contact Form',
-        message: form.message,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        subject: form.subject.trim() || "Website contact form",
+        message: form.message.trim(),
       });
 
       if (res.success) {
-        setSentSuccess(true);
-        toast({
-          title: "Message Sent! ✨",
-          description: "Thank you for reaching out! We'll get back to you within 24 hours.",
-        });
+        setSent(true);
         setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+        toast({
+          title: "Message sent",
+          description: "Thank you — the studio replies within 24 hours.",
+        });
       } else {
         toast({
-          title: "Message failed",
-          description: res.error || "Could not send message.",
+          title: "Message not sent",
+          description: res.error || "Please try again, or reach us on WhatsApp.",
           variant: "destructive",
         });
       }
-    } catch {
+    } catch (error) {
       toast({
         title: "Network error",
-        description: "Please try again later or WhatsApp us directly.",
+        description: error instanceof Error ? error.message : "Please try again or WhatsApp us directly.",
         variant: "destructive",
       });
     } finally {
@@ -70,234 +139,298 @@ export default function Contact() {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="pt-32 pb-16 bg-secondary">
-        <div className="container-narrow mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <AnimatedSection>
-            <span className="text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-4 block">
-              Get in Touch
-            </span>
-            <h1 className="text-4xl sm:text-5xl font-serif font-bold mb-4">
-              Let's <span className="text-gradient-gold">Connect</span>
-            </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-              Have a question, masterclass inquiry, or custom bridal request? Reach out to our studio.
-            </p>
-          </AnimatedSection>
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden pb-14 pt-36 sm:pt-40">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_55%_at_80%_0%,hsl(40_62%_62%_/_0.13),transparent_60%)]" />
+        <div className="shell">
+          <Reveal variant="fade">
+            <SectionIndex index="01" label="Contact" className="mb-8" />
+          </Reveal>
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <SplitText as="h1" text="Let's talk glam" highlightFrom={2} className="display-lg max-w-[16ch]" delay={0.15} />
+            <Reveal variant="up" delay={0.5}>
+              <p className="lede max-w-lg">
+                Bridal enquiries, masterclass registration, editorial briefs or a simple question — the
+                studio answers every message personally.
+              </p>
+            </Reveal>
+          </div>
         </div>
       </section>
 
-      {/* Contact Info + Form */}
-      <section className="section-padding bg-background">
-        <div className="container-narrow mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Info */}
-            <div className="space-y-8">
-              <AnimatedSection>
-                <h2 className="text-2xl font-serif font-bold mb-6 text-foreground">Contact Information</h2>
-                <div className="space-y-5 font-sans">
-                  <a href="https://wa.me/2348061651126" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-sm bg-card border border-border flex items-center justify-center group-hover:border-primary/40 transition-colors shadow-sm">
-                      <Phone size={18} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">WhatsApp / Phone</p>
-                      <p className="text-sm text-muted-foreground">+234 806 165 1126</p>
-                    </div>
+      {/* CHANNELS */}
+      <section className="pb-6">
+        <div className="shell grid gap-px overflow-hidden rounded-sm border border-border/70 bg-border/40 sm:grid-cols-2 lg:grid-cols-4">
+          {channels.map((channel, i) => {
+            const Inner = (
+              <>
+                <channel.icon className="h-5 w-5 text-gold" />
+                <span className="eyebrow-muted mt-5 block">{channel.label}</span>
+                <span className="mt-2 block font-display text-lg text-foreground">{channel.value}</span>
+                <span className="mt-3 block font-sans text-xs leading-relaxed text-muted-foreground">
+                  {channel.note}
+                </span>
+              </>
+            );
+            return (
+              <Reveal key={channel.label} variant="up" delay={i * 0.06}>
+                {channel.href ? (
+                  <a
+                    href={channel.href}
+                    target={channel.href.startsWith("http") ? "_blank" : undefined}
+                    rel="noopener noreferrer"
+                    className="group block h-full bg-[hsl(22_13%_6%)] p-7 transition-colors duration-500 hover:bg-[hsl(24_13%_8%)]"
+                  >
+                    {Inner}
                   </a>
-                  <a href="mailto:info@b1touchartistry.com" className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-sm bg-card border border-border flex items-center justify-center group-hover:border-primary/40 transition-colors shadow-sm">
-                      <Mail size={18} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Email</p>
-                      <p className="text-sm text-muted-foreground">info@b1touchartistry.com</p>
-                    </div>
-                  </a>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-sm bg-card border border-border flex items-center justify-center shadow-sm">
-                      <MapPin size={18} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Studio Location</p>
-                      <p className="text-sm text-muted-foreground">Addo Road, Ajah, Lagos, Nigeria</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-sm bg-card border border-border flex items-center justify-center shadow-sm">
-                      <Clock size={18} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Studio Hours</p>
-                      <p className="text-sm text-muted-foreground">Mon – Sat: 9AM – 7PM · Sun: By Appointment</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Social */}
-                <div className="mt-8 font-sans">
-                  <p className="text-sm font-semibold text-foreground mb-3">Follow Us</p>
-                  <div className="flex gap-3">
-                    <a
-                      href="https://instagram.com/b1touch_artistry"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground border border-border rounded-sm hover:border-primary/40 hover:text-primary transition-colors"
-                    >
-                      <Instagram size={16} /> Instagram
-                    </a>
-                    <a
-                      href="https://facebook.com/b1touchartistry"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground border border-border rounded-sm hover:border-primary/40 hover:text-primary transition-colors"
-                    >
-                      <Facebook size={16} /> Facebook
-                    </a>
-                  </div>
-                </div>
-              </AnimatedSection>
-
-              {/* Map */}
-              <AnimatedSection delay={0.2}>
-                <div className="aspect-video rounded-sm overflow-hidden border border-border shadow-sm">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.7!2d3.5!3d6.4!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwMjQnMDAuMCJOIDPCsDMwJzAwLjAiRQ!5e0!3m2!1sen!2sng!4v1!5m2!1sen!2sng"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    title="B1touch Artistry Studio Location"
-                  />
-                </div>
-              </AnimatedSection>
-            </div>
-
-            {/* Contact Form */}
-            <AnimatedSection delay={0.1}>
-              <div className="p-8 bg-card border border-border rounded-sm shadow-md font-sans">
-                <h2 className="text-2xl font-serif font-bold mb-2 text-foreground">Send Us a Message</h2>
-                <p className="text-sm text-muted-foreground mb-6">We respond promptly to all client inquiries.</p>
-
-                {sentSuccess && (
-                  <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-sm flex items-center gap-2 text-xs text-primary font-semibold">
-                    <CheckCircle2 size={16} />
-                    Message delivered to studio! We will contact you shortly.
-                  </div>
+                ) : (
+                  <div className="h-full bg-[hsl(22_13%_6%)] p-7">{Inner}</div>
                 )}
+              </Reveal>
+            );
+          })}
+        </div>
+      </section>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+      {/* FORM + MAP */}
+      <section className="section-y">
+        <div className="shell grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <Reveal variant="up">
+            <div className="panel rounded-sm p-7 sm:p-9">
+              <h2 className="display-md">Send a message</h2>
+              <p className="mt-3 font-sans text-sm text-muted-foreground">
+                Tell us the date, the venue and the look you have in mind.
+              </p>
+
+              <AnimatePresence>
+                {sent && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-6 flex items-start gap-3 rounded-sm border border-gold/30 bg-gold/[0.07] p-4"
+                  >
+                    <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-gold" />
+                    <p className="font-sans text-sm text-foreground/90">
+                      Message delivered to the studio — we'll be in touch shortly.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Name *</label>
+                    <label className="field-label" htmlFor="contact-name">
+                      Name *
+                    </label>
                     <input
-                      type="text"
+                      id="contact-name"
+                      className="field"
                       required
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                      placeholder="Your name"
+                      onChange={(event) => update("name", event.target.value)}
+                      placeholder="Your full name"
                     />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Email</label>
-                      <input
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                        placeholder="you@email.com"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Phone / WhatsApp</label>
-                      <input
-                        type="tel"
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="w-full px-4 py-3 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                        placeholder="+234..."
-                      />
-                    </div>
-                  </div>
                   <div>
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subject / Interest</label>
+                    <label className="field-label" htmlFor="contact-email">
+                      Email
+                    </label>
                     <input
-                      type="text"
-                      value={form.subject}
-                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                      className="w-full px-4 py-3 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                      placeholder="e.g. Bridal Glam Package, Masterclass Registration..."
+                      id="contact-email"
+                      type="email"
+                      className="field"
+                      value={form.email}
+                      onChange={(event) => update("email", event.target.value)}
+                      placeholder="you@email.com"
                     />
                   </div>
                   <div>
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Message *</label>
-                    <textarea
-                      required
-                      rows={5}
-                      value={form.message}
-                      onChange={(e) => setForm({ ...form, message: e.target.value })}
-                      className="w-full px-4 py-3 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
-                      placeholder="How can we help make your glam vision come to life?"
+                    <label className="field-label" htmlFor="contact-phone">
+                      Phone / WhatsApp
+                    </label>
+                    <input
+                      id="contact-phone"
+                      type="tel"
+                      className="field"
+                      value={form.phone}
+                      onChange={(event) => update("phone", event.target.value)}
+                      placeholder="+234…"
                     />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full flex items-center justify-center gap-2 py-4 text-sm font-semibold tracking-wide bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm shadow-md disabled:opacity-50"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Sending Message...
-                      </>
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        Send Message
-                      </>
-                    )}
-                  </button>
-                </form>
+                  <div>
+                    <label className="field-label" htmlFor="contact-subject">
+                      Subject
+                    </label>
+                    <input
+                      id="contact-subject"
+                      className="field"
+                      value={form.subject}
+                      onChange={(event) => update("subject", event.target.value)}
+                      placeholder="Bridal package, masterclass…"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="field-label" htmlFor="contact-message">
+                    Message *
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    className="field resize-none"
+                    rows={5}
+                    required
+                    value={form.message}
+                    onChange={(event) => update("message", event.target.value)}
+                    placeholder="How can we help bring your glam vision to life?"
+                  />
+                </div>
+
+                <button type="submit" disabled={submitting} className="btn btn-gold w-full shine">
+                  {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
+                  {submitting ? "Sending" : "Send message"}
+                </button>
+              </form>
+            </div>
+          </Reveal>
+
+          <div className="space-y-8">
+            <Reveal variant="up" delay={0.12}>
+              <div className="overflow-hidden rounded-sm border border-border/70">
+                <iframe
+                  src={MAP_EMBED}
+                  title="B1touch Artistry studio location in Ajah, Lagos"
+                  width="100%"
+                  height="340"
+                  loading="lazy"
+                  style={{ border: 0 }}
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
               </div>
-            </AnimatedSection>
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                <a
+                  href="https://www.google.com/maps?q=Addo+Road,+Ajah,+Lagos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-draw inline-flex items-center gap-2 font-sans text-sm uppercase tracking-[0.18em] text-gold-light"
+                >
+                  Open in maps <ArrowUpRight size={13} />
+                </a>
+                <span className="font-sans text-xs text-muted-foreground">
+                  Street parking · arrive 10 minutes before your slot
+                </span>
+              </div>
+            </Reveal>
+
+            <Reveal variant="up" delay={0.2}>
+              <div className="panel rounded-sm p-7">
+                <span className="eyebrow">Follow the studio</span>
+                <p className="mt-4 font-sans text-sm leading-relaxed text-muted-foreground">
+                  New looks, behind-the-scenes and open dates are posted first on Instagram.
+                </p>
+                <div className="mt-6 flex gap-3">
+                  <a
+                    href="https://instagram.com/b1touchartistry"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline btn-sm"
+                  >
+                    <Instagram size={14} /> Instagram
+                  </a>
+                  <a
+                    href="https://facebook.com/b1touchartistry"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-ghost btn-sm"
+                  >
+                    <Facebook size={14} /> Facebook
+                  </a>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="section-padding bg-secondary">
-        <div className="container-narrow mx-auto">
-          <SectionHeading
-            subtitle="FAQ"
-            title="Common Questions"
-            description="Quick answers to help you prepare for your session."
-          />
-          <div className="max-w-2xl mx-auto space-y-3 font-sans">
-            {faqs.map((faq, i) => (
-              <AnimatedSection key={i} delay={i * 0.05}>
-                <div className="border border-border rounded-sm overflow-hidden bg-card">
+      <section className="border-y border-border/60 bg-[hsl(22_13%_5%)] py-20 sm:py-28">
+        <div className="shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <div className="lg:sticky lg:top-32 lg:self-start">
+            <SectionIndex index="02" label="FAQ" className="mb-7" />
+            <SplitText as="h2" text="Questions, answered" className="display-lg max-w-[14ch]" />
+            <Reveal variant="up" delay={0.2}>
+              <Ornament className="mt-8 max-w-xs" />
+              <p className="mt-6 max-w-sm font-sans text-sm leading-relaxed text-muted-foreground">
+                Still unsure about something? Message the studio — we'd rather answer twice than have you
+                guess.
+              </p>
+            </Reveal>
+          </div>
+
+          <div className="divide-y divide-border/70 border-y border-border/70">
+            {faqs.map((faq, index) => {
+              const open = openFaq === index;
+              return (
+                <div key={faq.q}>
                   <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between p-4 text-left text-sm font-semibold text-foreground hover:text-primary transition-colors"
+                    onClick={() => setOpenFaq(open ? null : index)}
+                    aria-expanded={open}
+                    className="flex w-full items-center justify-between gap-6 py-6 text-left"
                   >
-                    {faq.q}
-                    <span className={`text-primary transition-transform ${openFaq === i ? "rotate-45" : ""}`}>+</span>
+                    <span
+                      className={`font-display text-xl transition-colors duration-500 ${
+                        open ? "text-gold-light" : "text-foreground hover:text-gold-light"
+                      }`}
+                    >
+                      {faq.q}
+                    </span>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gold/30 text-gold">
+                      {open ? <Minus size={14} /> : <Plus size={14} />}
+                    </span>
                   </button>
-                  {openFaq === i && (
-                    <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
-                      {faq.a}
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <p className="max-w-2xl pb-7 font-sans text-sm leading-[1.9] text-muted-foreground">
+                          {faq.a}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </AnimatedSection>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Instagram Feed */}
+      {/* CTA + SOCIAL */}
+      <section className="py-20 text-center sm:py-24">
+        <div className="shell">
+          <SplitText as="h2" text="Prefer to book straight away?" className="display-md mx-auto max-w-[22ch]" highlightFrom={3} />
+          <Reveal variant="up" delay={0.25} className="mt-9 flex flex-wrap justify-center gap-4">
+            <Magnetic strength={0.2}>
+              <a href="/booking" className="btn btn-gold shine">
+                Reserve a session
+                <ArrowUpRight size={14} />
+              </a>
+            </Magnetic>
+            <a href="https://wa.me/2348061651126" target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+              WhatsApp the studio
+            </a>
+          </Reveal>
+        </div>
+      </section>
+
       <InstagramFeed />
     </Layout>
   );

@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { Star, X, Check, Loader2, Sparkles, Camera } from 'lucide-react';
-import { api } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, Loader2, Sparkles, Star, X } from "lucide-react";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -9,53 +12,88 @@ interface ReviewModalProps {
   onSuccess?: () => void;
 }
 
+const EVENT_TYPES = [
+  "Traditional Wedding",
+  "White Wedding",
+  "Owambe / Party Glam",
+  "Birthday Glam",
+  "Editorial / Shoot",
+  "Makeup Masterclass",
+];
+
 export function ReviewModal({ isOpen, onClose, onSuccess }: ReviewModalProps) {
   const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [eventType, setEventType] = useState('Bridal');
+  const [name, setName] = useState("");
+  const [eventType, setEventType] = useState(EVENT_TYPES[0]);
   const [rating, setRating] = useState(5);
-  const [quote, setQuote] = useState('');
   const [hoverRating, setHoverRating] = useState(0);
+  const [quote, setQuote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen, onClose]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!isOpen) {
+      setDone(false);
+      setSubmitting(false);
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     if (!name.trim() || !quote.trim()) {
       toast({
-        title: 'Please fill in all fields',
-        description: 'Your name and review text are required.',
-        variant: 'destructive',
+        title: "Almost there",
+        description: "Please add your name and a few words about your experience.",
+        variant: "destructive",
       });
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await api.testimonials.submit({
-        name,
-        eventType,
-        rating,
-        quote,
-      });
+      const res = await api.testimonials.submit({ name: name.trim(), eventType, rating, quote: quote.trim() });
 
       if (res.success) {
+        setDone(true);
         toast({
-          title: 'Review Submitted! 💖',
-          description: 'Thank you for sharing your experience with B1touch Artistry.',
+          title: "Review received 💖",
+          description: "Thank you for sharing your experience with B1touch Artistry.",
         });
-        setName('');
-        setQuote('');
+        setName("");
+        setQuote("");
         setRating(5);
-        onClose();
         onSuccess?.();
+        window.setTimeout(() => {
+          onClose();
+        }, 1400);
+      } else {
+        // Previously failed silently — surface the reason instead.
+        toast({
+          title: "We couldn't post that",
+          description: res.error || "Please try again in a moment.",
+          variant: "destructive",
+        });
       }
-    } catch {
+    } catch (error) {
       toast({
-        title: 'Submission failed',
-        description: 'Please try again.',
-        variant: 'destructive',
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -63,126 +101,161 @@ export function ReviewModal({ isOpen, onClose, onSuccess }: ReviewModalProps) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-card border border-border rounded-sm max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div>
-            <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-primary block mb-1">
-              Client Feedback
-            </span>
-            <h3 className="text-xl font-serif font-bold text-foreground">
-              Share Your Glam Experience
-            </h3>
-          </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X size={20} />
-          </button>
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-[1100] flex items-center justify-center overflow-y-auto p-4 py-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.35, ease: EASE }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Share your review"
+        >
+          <div
+            className="absolute inset-0 bg-[hsl(20_14%_3%_/_0.86)] backdrop-blur-md"
+            onClick={onClose}
+          />
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs font-sans">
-          {/* Rating Stars */}
-          <div>
-            <label className="block text-muted-foreground mb-1.5 uppercase tracking-wider text-[10px]">
-              Your Rating *
-            </label>
-            <div className="flex items-center gap-1.5">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  type="button"
-                  key={star}
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="p-1 text-primary focus:outline-none transition-transform hover:scale-110"
-                >
-                  <Star
-                    size={22}
-                    className={`transition-colors ${
-                      (hoverRating || rating) >= star
-                        ? 'fill-primary text-primary'
-                        : 'text-muted-foreground/40'
-                    }`}
-                  />
-                </button>
-              ))}
-              <span className="ml-2 text-xs font-semibold text-foreground">
-                {rating} / 5 Stars
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-muted-foreground mb-1 uppercase tracking-wider text-[10px]">
-                Your Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Chioma Adebayo"
-                className="w-full px-3 py-2.5 bg-secondary border border-border rounded-sm text-foreground focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-muted-foreground mb-1 uppercase tracking-wider text-[10px]">
-                Service / Occasion
-              </label>
-              <select
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-                className="w-full px-3 py-2.5 bg-secondary border border-border rounded-sm text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="Traditional Wedding">Traditional Wedding</option>
-                <option value="White Wedding">White Wedding</option>
-                <option value="Owambe Guest">Owambe / Party Glam</option>
-                <option value="Birthday Celebration">Birthday Glam</option>
-                <option value="Editorial & Photoshoot">Editorial / Shoot</option>
-                <option value="Makeup Masterclass">Makeup Masterclass</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-muted-foreground mb-1 uppercase tracking-wider text-[10px]">
-              Your Review & Experience *
-            </label>
-            <textarea
-              rows={4}
-              required
-              value={quote}
-              onChange={(e) => setQuote(e.target.value)}
-              placeholder="Tell us about your look, longevity in Lagos weather, compliments received, and customer care..."
-              className="w-full px-3 py-2.5 bg-secondary border border-border rounded-sm text-foreground focus:outline-none focus:border-primary resize-none text-xs"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <motion.div
+            initial={{ opacity: 0, y: 34, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            className="glass-strong relative w-full max-w-xl rounded-sm p-6 shadow-cinema sm:p-9"
+          >
             <button
-              type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-sans text-muted-foreground hover:text-foreground"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-colors hover:border-gold/50 hover:text-gold"
+              aria-label="Close review form"
             >
-              Cancel
+              <X size={16} />
             </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-6 py-2.5 bg-gradient-gold text-primary-foreground font-semibold rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center gap-1.5"
-            >
-              {submitting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-              Submit Review
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+
+            {done ? (
+              <div className="flex flex-col items-center py-14 text-center">
+                <motion.span
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.6, ease: EASE }}
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-gold"
+                >
+                  <Check className="h-7 w-7 text-primary-foreground" />
+                </motion.span>
+                <h3 className="mt-6 font-display text-2xl">Thank you</h3>
+                <p className="mt-3 max-w-xs font-sans text-sm text-muted-foreground">
+                  Your review is with the studio team for a final look before it goes live.
+                </p>
+              </div>
+            ) : (
+              <>
+                <span className="eyebrow">Client feedback</span>
+                <h3 className="mt-3 font-display text-3xl">Share your glam experience</h3>
+                <p className="mt-3 font-sans text-sm text-muted-foreground">
+                  Two minutes of your time helps the next queen choose with confidence.
+                </p>
+
+                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                  {/* Rating */}
+                  <div>
+                    <span className="field-label">Your rating *</span>
+                    <div className="flex items-center gap-2.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setRating(star)}
+                          onPointerEnter={() => setHoverRating(star)}
+                          onPointerLeave={() => setHoverRating(0)}
+                          className="transition-transform duration-300 ease-expo hover:scale-110"
+                          aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                        >
+                          <Star
+                            size={26}
+                            className={`transition-colors duration-300 ${
+                              (hoverRating || rating) >= star
+                                ? "fill-gold text-gold"
+                                : "text-muted-foreground/35"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="ml-2 font-sans text-xs text-muted-foreground">
+                        {rating} / 5
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <label className="field-label" htmlFor="review-name">
+                        Your name *
+                      </label>
+                      <input
+                        id="review-name"
+                        className="field"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        placeholder="e.g. Chioma Adebayo"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="field-label" htmlFor="review-event">
+                        Occasion
+                      </label>
+                      <select
+                        id="review-event"
+                        className="field appearance-none"
+                        value={eventType}
+                        onChange={(event) => setEventType(event.target.value)}
+                      >
+                        {EVENT_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="field-label" htmlFor="review-quote">
+                      Your experience *
+                    </label>
+                    <textarea
+                      id="review-quote"
+                      className="field resize-none"
+                      rows={5}
+                      required
+                      value={quote}
+                      onChange={(event) => setQuote(event.target.value)}
+                      placeholder="Tell us about the look, how it held up through the day, and the studio experience…"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border/70 pt-6">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="font-sans text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={submitting} className="btn btn-gold btn-sm shine">
+                      {submitting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                      {submitting ? "Posting" : "Submit review"}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
+
+export default ReviewModal;

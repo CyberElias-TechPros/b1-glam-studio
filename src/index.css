@@ -2,85 +2,227 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   B1TOUCH ARTISTRY — DESIGN SYSTEM
+   An art-directed, cinematic system: espresso depth, champagne light,
+   editorial type, film grain, and motion with intent.
+   ========================================================================== */
+
 @layer base {
   :root {
-    --background: 0 0% 5%;
-    --foreground: 40 20% 95%;
+    /* — Surface: espresso, never flat black — */
+    --background: 20 14% 4%;
+    --foreground: 40 32% 94%;
 
-    --card: 0 0% 8%;
-    --card-foreground: 40 20% 95%;
+    --card: 24 12% 7%;
+    --card-foreground: 40 32% 94%;
 
-    --popover: 0 0% 8%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 24 12% 7%;
+    --popover-foreground: 40 32% 94%;
 
-    --primary: 38 55% 58%;
-    --primary-foreground: 0 0% 5%;
+    /* — Champagne gold — */
+    --primary: 40 62% 62%;
+    --primary-foreground: 20 14% 4%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 40 20% 90%;
+    --secondary: 26 10% 11%;
+    --secondary-foreground: 40 26% 90%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 40 10% 55%;
+    --muted: 26 9% 14%;
+    --muted-foreground: 38 14% 62%;
 
-    --accent: 30 45% 40%;
-    --accent-foreground: 40 20% 95%;
+    --accent: 32 38% 42%;
+    --accent-foreground: 40 32% 96%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 47%;
+    --destructive-foreground: 40 32% 96%;
 
-    --border: 40 15% 18%;
-    --input: 0 0% 15%;
-    --ring: 38 55% 58%;
+    --border: 36 14% 18%;
+    --input: 26 10% 15%;
+    --ring: 40 62% 62%;
 
-    --radius: 0.25rem;
+    --radius: 0.35rem;
 
-    --gold: 38 55% 58%;
-    --gold-light: 40 65% 72%;
-    --gold-dark: 35 50% 35%;
+    /* — Brand tokens — */
+    --gold: 40 62% 62%;
+    --gold-light: 44 74% 78%;
+    --gold-dark: 34 46% 34%;
+    --gold-deep: 30 40% 22%;
     --cream: 40 33% 95%;
-    --cream-dark: 35 20% 85%;
+    --cream-dark: 36 18% 82%;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 40 20% 95%;
-    --sidebar-primary: 38 55% 58%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 40 20% 95%;
-    --sidebar-border: 40 15% 18%;
-    --sidebar-ring: 38 55% 58%;
+    --wine: 344 34% 24%;
+    --rose: 12 46% 68%;
+    --ink: 20 14% 3%;
+
+    /* — Type — */
+    --font-display: "Bodoni Moda Variable", "Playfair Display", Georgia, serif;
+    --font-serif: "Playfair Display Variable", "Bodoni Moda", Georgia, serif;
+    --font-sans: "Jost Variable", "DM Sans", system-ui, sans-serif;
+
+    /* — Motion — */
+    --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+    --dur-fast: 0.24s;
+    --dur: 0.55s;
+    --dur-slow: 0.9s;
+
+    --sidebar-background: 24 12% 6%;
+    --sidebar-foreground: 40 32% 94%;
+    --sidebar-primary: 40 62% 62%;
+    --sidebar-primary-foreground: 20 14% 4%;
+    --sidebar-accent: 26 10% 12%;
+    --sidebar-accent-foreground: 40 32% 94%;
+    --sidebar-border: 36 14% 18%;
+    --sidebar-ring: 40 62% 62%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* The document is the scroll container for the parallax layers; giving it a
+       non-static position keeps their offsets measured against it. */
+    position: relative;
+  }
+
+  /* Lenis drives scrolling — disable native smoothing to avoid fighting it */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  html.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(120% 80% at 12% -10%, hsl(var(--gold) / 0.1) 0%, transparent 55%),
+      radial-gradient(90% 70% at 100% 0%, hsl(var(--wine) / 0.35) 0%, transparent 60%),
+      radial-gradient(100% 60% at 50% 110%, hsl(var(--gold-deep) / 0.22) 0%, transparent 65%);
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Cinematic focus ring — visible, never ugly */
+  :focus-visible {
+    outline: 1px solid hsl(var(--gold-light) / 0.9);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  img {
+    -webkit-user-drag: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-@layer utilities {
-  .text-gradient-gold {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(40 65% 72%), hsl(38 55% 58%), hsl(35 50% 35%));
+@layer components {
+  /* ————————————————————————————————————————————————
+     TYPE SCALE — editorial, fluid, optically balanced
+     ———————————————————————————————————————————————— */
+  .display-xl {
+    font-family: var(--font-display, "Bodoni Moda", "Playfair Display", serif);
+    font-size: clamp(2.75rem, 8.4vw, 8rem);
+    line-height: 0.94;
+    letter-spacing: -0.025em;
+    font-weight: 500;
   }
 
-  .bg-gradient-gold {
-    background-image: linear-gradient(135deg, hsl(38 55% 58%), hsl(35 50% 35%));
+  .display-lg {
+    font-family: var(--font-display, "Bodoni Moda", "Playfair Display", serif);
+    font-size: clamp(2.25rem, 5.4vw, 4.75rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-weight: 500;
   }
 
-  .bg-gradient-gold-hover {
-    background-image: linear-gradient(135deg, hsl(40 65% 72%), hsl(38 55% 58%));
+  .display-md {
+    font-family: var(--font-display, "Bodoni Moda", "Playfair Display", serif);
+    font-size: clamp(1.65rem, 3.2vw, 2.75rem);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    font-weight: 500;
   }
 
-  .border-gold {
-    border-color: hsl(38 55% 58%);
+  .display-italic {
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .eyebrow {
+    @apply font-sans;
+    font-size: 0.6875rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: hsl(var(--gold));
+  }
+
+  .eyebrow-muted {
+    @apply font-sans uppercase;
+    font-size: 0.625rem;
+    letter-spacing: 0.34em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .lede {
+    font-size: clamp(1rem, 1.1vw + 0.7rem, 1.2rem);
+    line-height: 1.75;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .label-xs {
+    @apply font-sans uppercase;
+    font-size: 0.625rem;
+    letter-spacing: 0.28em;
+    font-weight: 500;
+  }
+
+  /* ————————————————————————————————————————————————
+     LAYOUT
+     ———————————————————————————————————————————————— */
+  .shell {
+    @apply w-full mx-auto px-5 sm:px-8 lg:px-12;
+    max-width: 1440px;
+  }
+
+  .shell-tight {
+    @apply w-full mx-auto px-5 sm:px-8 lg:px-12;
+    max-width: 1080px;
   }
 
   .section-padding {
@@ -91,14 +233,333 @@
     @apply max-w-6xl mx-auto;
   }
 
+  .section-y {
+    @apply py-20 sm:py-28 lg:py-36;
+  }
+
+  /* Hairline rules with light-gathering gradient */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.35) 22%, hsl(var(--gold) / 0.35) 78%, transparent);
+  }
+
+  .rule-soft {
+    border-top: 1px solid hsl(var(--border) / 0.8);
+  }
+
+  /* ————————————————————————————————————————————————
+     SURFACES
+     ———————————————————————————————————————————————— */
+  .glass {
+    background: linear-gradient(160deg, hsl(26 12% 10% / 0.78), hsl(20 14% 5% / 0.72));
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid hsl(var(--border) / 0.9);
+  }
+
+  .glass-strong {
+    background: linear-gradient(160deg, hsl(26 12% 11% / 0.92), hsl(20 14% 5% / 0.88));
+    backdrop-filter: blur(26px) saturate(150%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    border: 1px solid hsl(var(--gold) / 0.16);
+  }
+
+  .panel {
+    position: relative;
+    background:
+      linear-gradient(155deg, hsl(28 12% 9%) 0%, hsl(22 14% 5.5%) 62%, hsl(20 14% 4%) 100%);
+    border: 1px solid hsl(var(--border) / 0.9);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(90% 70% at 100% 0%, hsl(var(--gold) / 0.1), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.7s var(--ease-expo);
+    pointer-events: none;
+  }
+
+  .panel:hover::before {
+    opacity: 1;
+  }
+
+  /* Glass reflection that follows the pointer (set --mx/--my inline) */
+  .spotlight::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    background: radial-gradient(
+      340px circle at var(--mx, 50%) var(--my, 0%),
+      hsl(var(--gold) / 0.16),
+      transparent 62%
+    );
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-expo);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .spotlight:hover::after {
+    opacity: 1;
+  }
+
+  /* ————————————————————————————————————————————————
+     GOLD
+     ———————————————————————————————————————————————— */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      104deg,
+      hsl(44 78% 82%) 0%,
+      hsl(40 66% 64%) 34%,
+      hsl(34 52% 44%) 72%,
+      hsl(42 70% 70%) 100%
+    );
+    background-size: 200% 100%;
+  }
+
+  .text-gradient-ivory {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(180deg, hsl(40 40% 98%) 0%, hsl(38 22% 74%) 100%);
+  }
+
+  .bg-gradient-gold {
+    background-image: linear-gradient(
+      118deg,
+      hsl(44 74% 72%) 0%,
+      hsl(40 62% 58%) 34%,
+      hsl(34 50% 42%) 76%,
+      hsl(42 68% 66%) 100%
+    );
+  }
+
+  .bg-gradient-gold-hover {
+    background-image: linear-gradient(118deg, hsl(44 80% 80%), hsl(40 68% 66%));
+  }
+
+  .border-gold {
+    border-color: hsl(40 62% 62%);
+  }
+
   .gold-glow {
-    box-shadow: 0 0 30px -5px hsl(38 55% 58% / 0.3);
+    box-shadow: 0 18px 60px -22px hsl(40 62% 62% / 0.55);
   }
 
   .gold-text-shadow {
-    text-shadow: 0 0 40px hsl(38 55% 58% / 0.3);
+    text-shadow: 0 0 60px hsl(40 62% 62% / 0.35);
   }
 
+  .gold-hairline {
+    border: 1px solid hsl(var(--gold) / 0.28);
+  }
+
+  /* ————————————————————————————————————————————————
+     MOTION PRIMITIVES
+     ———————————————————————————————————————————————— */
+  .mask-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+    margin-bottom: -0.08em;
+  }
+
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 45%;
+    left: -60%;
+    background: linear-gradient(100deg, transparent, hsl(0 0% 100% / 0.32), transparent);
+    transform: skewX(-18deg);
+    transition: left 0.9s var(--ease-expo);
+    pointer-events: none;
+  }
+
+  .shine:hover::after {
+    left: 120%;
+  }
+
+  .lift {
+    transition: transform 0.7s var(--ease-expo), box-shadow 0.7s var(--ease-expo), border-color 0.5s ease;
+  }
+
+  .lift:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 34px 70px -40px hsl(0 0% 0% / 0.9), 0 0 0 1px hsl(var(--gold) / 0.16);
+  }
+
+  /* Underline that draws from the left on hover */
+  .link-draw {
+    position: relative;
+    display: inline-block;
+  }
+
+  .link-draw::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    height: 1px;
+    width: 100%;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.55s var(--ease-expo);
+  }
+
+  .link-draw:hover::after,
+  .link-draw[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+
+  /* ————————————————————————————————————————————————
+     FILM TREATMENT — grain + vignette + scanline
+     ———————————————————————————————————————————————— */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .vignette::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 90% at 50% 45%, transparent 45%, hsl(20 14% 3% / 0.72) 100%);
+    pointer-events: none;
+  }
+
+  /* Cinematic grade over photography */
+  .grade-warm::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(190deg, hsl(34 46% 34% / 0.22), transparent 45%),
+      linear-gradient(0deg, hsl(344 34% 14% / 0.34), transparent 60%);
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+
+  /* ————————————————————————————————————————————————
+     FORMS
+     ———————————————————————————————————————————————— */
+  .field {
+    @apply w-full font-sans text-sm text-foreground;
+    background: hsl(26 10% 9% / 0.7);
+    border: 1px solid hsl(var(--border));
+    border-radius: 2px;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  .field::placeholder {
+    color: hsl(var(--muted-foreground) / 0.66);
+  }
+
+  .field:hover {
+    border-color: hsl(var(--gold) / 0.3);
+  }
+
+  .field:focus {
+    outline: none;
+    border-color: hsl(var(--gold) / 0.72);
+    background: hsl(26 12% 11% / 0.85);
+    box-shadow: 0 0 0 3px hsl(var(--gold) / 0.1);
+  }
+
+  .field-label {
+    @apply font-sans uppercase;
+    display: block;
+    font-size: 0.625rem;
+    letter-spacing: 0.26em;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 0.6rem;
+  }
+
+  /* ————————————————————————————————————————————————
+     BUTTONS
+     ———————————————————————————————————————————————— */
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-2.5 font-sans;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 1.05rem 2rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: color 0.45s var(--ease-expo), background 0.45s var(--ease-expo),
+      border-color 0.45s var(--ease-expo), transform 0.45s var(--ease-expo),
+      box-shadow 0.45s var(--ease-expo);
+  }
+
+  .btn-gold {
+    @apply bg-gradient-gold text-primary-foreground;
+    box-shadow: 0 20px 45px -26px hsl(40 62% 62% / 0.85);
+  }
+
+  .btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 26px 60px -24px hsl(40 62% 62% / 0.95);
+    filter: brightness(1.06);
+  }
+
+  .btn-outline {
+    border: 1px solid hsl(var(--gold) / 0.42);
+    color: hsl(var(--gold-light));
+    background: hsl(var(--gold) / 0.02);
+  }
+
+  .btn-outline:hover {
+    border-color: hsl(var(--gold) / 0.9);
+    background: hsl(var(--gold) / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .btn-ghost:hover {
+    border-color: hsl(var(--gold) / 0.45);
+    color: hsl(var(--gold-light));
+  }
+
+  .btn-ivory {
+    background: hsl(var(--cream));
+    color: hsl(20 14% 6%);
+  }
+
+  .btn-ivory:hover {
+    background: hsl(40 40% 99%);
+    transform: translateY(-2px);
+  }
+
+  .btn-sm {
+    padding: 0.7rem 1.15rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+  }
+
+  /* ————————————————————————————————————————————————
+     MISC
+     ———————————————————————————————————————————————— */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -106,290 +567,415 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .numeral {
+    font-family: var(--font-display, "Bodoni Moda", serif);
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 34s linear infinite;
+  }
+
+  .marquee-track-slow {
+    animation-duration: 62s;
+  }
+
+  .marquee-reverse {
+    animation-direction: reverse;
+  }
+
+  .marquee-mask {
+    mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+  }
+
+  .cursor-none-all,
+  .cursor-none-all * {
+    cursor: none !important;
+  }
+
+  .hover-zoom img {
+    transition: transform 1.15s var(--ease-expo), filter 1.15s var(--ease-expo);
+  }
+
+  .hover-zoom:hover img {
+    transform: scale(1.06);
+  }
+
+  /* Ad containers, restyled to sit inside the art direction */
+  /* Sponsored slot: framed like a plate in the layout so an unfilled unit
+     still reads as intentional art direction, not a hole. */
+  .ad-container {
+    @apply relative border border-gold/15 bg-[linear-gradient(180deg,hsl(24_12%_7%_/_0.85),hsl(20_14%_4%_/_0.6))] overflow-hidden;
+    transition: border-color 0.5s var(--ease-expo), background 0.5s var(--ease-expo);
+  }
+
+  .ad-container::before {
+    content: "Advertisement";
+    position: absolute;
+    top: 0.5rem;
+    left: 0.65rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground) / 0.55);
+    pointer-events: none;
+  }
+
+  .ad-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(120% 100% at 50% 0%, hsl(40 62% 62% / 0.05), transparent 62%);
+  }
+
+  .ad-container:hover {
+    @apply border-gold/25;
+  }
+
+  .ad-container ins.adsbygoogle {
+    background: transparent !important;
+  }
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .will-transform {
+    will-change: transform;
+  }
 }
 
-/* Custom scrollbar */
+/* ==========================================================================
+   SCROLLBAR & SELECTION
+   ========================================================================== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 9px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(0 0% 5%);
+  background: hsl(20 14% 4%);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(38 55% 58% / 0.4);
-  border-radius: 3px;
+  background: linear-gradient(hsl(40 62% 58% / 0.5), hsl(34 46% 34% / 0.6));
+  border-radius: 9px;
+  border: 2px solid hsl(20 14% 4%);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(38 55% 58% / 0.6);
+  background: linear-gradient(hsl(44 74% 72% / 0.75), hsl(40 62% 58% / 0.8));
 }
 
-/* Selection color */
 ::selection {
-  background: hsl(38 55% 58% / 0.3);
-  color: hsl(40 20% 95%);
+  background: hsl(40 62% 62% / 0.32);
+  color: hsl(40 32% 98%);
 }
 
-/* AdSense Ad Container Styling */
-.ad-container {
-  @apply bg-secondary/30 border border-border/50 rounded-sm overflow-hidden;
-  transition: all 0.3s ease;
+/* ==========================================================================
+   KEYFRAMES
+   ========================================================================== */
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
-.ad-container:hover {
-  @apply border-primary/30;
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
-/* Ensure ads blend with the elegant aesthetic */
-.ad-container ins.adsbygoogle {
-  background: transparent !important;
+@keyframes slow-drift {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.12) translate3d(-1.4%, -1%, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
 }
 
-/* Subtle ad label */
-.ad-container::before {
-  content: '';
-  @apply absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent;
+@keyframes aura-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
 }
 
-/* ========================================
-   Blog Post Content Styling - WordPress-like SEO Structure
-   ======================================== */
+@keyframes sheen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-16deg);
+  }
+  100% {
+    transform: translateX(320%) skewX(-16deg);
+  }
+}
 
-/* Blog prose container - optimal reading width */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.4s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    hsl(26 10% 10%) 0%,
+    hsl(28 12% 16%) 50%,
+    hsl(26 10% 10%) 100%
+  );
+  background-size: 200% 100%;
+}
+
+.animate-slow-drift {
+  animation: slow-drift 26s var(--ease-inout) infinite;
+}
+
+.animate-aura {
+  animation: aura-pulse 9s var(--ease-inout) infinite;
+}
+
+.animate-float-soft {
+  animation: float-soft 7s var(--ease-inout) infinite;
+}
+
+/* ==========================================================================
+   BLOG / EDITORIAL PROSE
+   ========================================================================== */
 .blog-content {
-  @apply max-w-3xl mx-auto;
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: hsl(40 10% 70%);
+  max-width: 46rem;
+  margin: 0 auto;
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: hsl(38 16% 72%);
 }
 
-/* Introduction paragraph - larger, more prominent */
 .blog-content > p:first-of-type {
-  @apply text-lg sm:text-xl;
-  line-height: 1.9;
-  color: hsl(40 15% 80%);
-  margin-bottom: 2rem;
+  font-size: 1.2rem;
+  line-height: 1.85;
+  color: hsl(38 24% 84%);
+  margin-bottom: 2.25rem;
 }
 
-/* Paragraph spacing - generous for readability */
+.blog-content > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-display, "Bodoni Moda", serif);
+  font-size: 3.9rem;
+  line-height: 0.82;
+  margin: 0.3rem 0.7rem 0 0;
+  color: hsl(40 62% 62%);
+}
+
 .blog-content p {
   margin-bottom: 1.75rem;
 }
 
-/* Strong/bold text */
 .blog-content strong {
-  color: hsl(40 20% 95%);
+  color: hsl(40 32% 96%);
   font-weight: 600;
 }
 
-/* Links in content */
+.blog-content em {
+  color: hsl(40 24% 88%);
+}
+
 .blog-content a {
-  color: hsl(38 55% 58%);
+  color: hsl(44 70% 72%);
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-  transition: all 0.2s ease;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease, text-decoration-thickness 0.3s ease;
 }
 
 .blog-content a:hover {
-  color: hsl(40 65% 72%);
+  color: hsl(44 80% 84%);
   text-decoration-thickness: 2px;
 }
 
-/* ========================================
-   Heading Hierarchy - SEO Optimized
-   ======================================== */
-
-/* H2 - Main section headings */
 .blog-content h2 {
-  @apply font-serif font-bold;
-  font-size: 1.75rem;
-  line-height: 1.3;
-  color: hsl(40 20% 95%);
-  margin-top: 3rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid hsl(40 15% 18%);
+  font-family: var(--font-display, "Bodoni Moda", serif);
+  font-size: clamp(1.5rem, 2.6vw, 2.05rem);
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  color: hsl(40 32% 96%);
+  margin-top: 3.5rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
-/* H3 - Subsection headings */
 .blog-content h3 {
-  @apply font-serif font-semibold;
-  font-size: 1.375rem;
-  line-height: 1.4;
-  color: hsl(40 20% 90%);
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
+  font-family: var(--font-display, "Bodoni Moda", serif);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  line-height: 1.3;
+  color: hsl(40 28% 93%);
+  margin-top: 2.75rem;
+  margin-bottom: 0.95rem;
 }
 
-/* H4 - Minor headings */
 .blog-content h4 {
-  @apply font-serif font-semibold;
+  font-family: var(--font-serif);
   font-size: 1.125rem;
-  line-height: 1.5;
-  color: hsl(40 15% 85%);
+  color: hsl(40 22% 88%);
   margin-top: 2rem;
-  margin-bottom: 0.875rem;
+  margin-bottom: 0.8rem;
 }
 
-/* H5 and H6 - Smallest headings */
 .blog-content h5,
 .blog-content h6 {
-  @apply font-sans font-semibold uppercase tracking-wide;
-  font-size: 0.875rem;
-  color: hsl(38 55% 58%);
-  margin-top: 1.75rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: hsl(40 62% 66%);
+  margin-top: 2rem;
   margin-bottom: 0.75rem;
 }
 
-/* First heading should have less top margin */
 .blog-content h2:first-of-type,
 .blog-content h3:first-of-type {
   margin-top: 1.5rem;
 }
 
-/* ========================================
-   Lists - Bullet points and numbered
-   ======================================== */
-
-/* Unordered lists */
 .blog-content ul {
   margin-bottom: 1.75rem;
-  padding-left: 1.5rem;
+  padding-left: 1.35rem;
+  list-style: none;
 }
 
 .blog-content ul li {
   position: relative;
-  margin-bottom: 0.75rem;
-  padding-left: 0.5rem;
-  line-height: 1.7;
+  margin-bottom: 0.7rem;
+  padding-left: 0.75rem;
+  line-height: 1.75;
 }
 
-.blog-content ul li::marker {
-  color: hsl(38 55% 58%);
+.blog-content ul li::before {
+  content: "";
+  position: absolute;
+  left: -1.05rem;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: hsl(40 62% 62%);
 }
 
-/* Nested lists */
-.blog-content ul ul {
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-/* Ordered lists */
 .blog-content ol {
   margin-bottom: 1.75rem;
   padding-left: 1.5rem;
-  counter-reset: item;
 }
 
 .blog-content ol li {
-  position: relative;
-  margin-bottom: 0.75rem;
-  padding-left: 0.5rem;
-  line-height: 1.7;
+  margin-bottom: 0.7rem;
+  padding-left: 0.35rem;
+  line-height: 1.75;
 }
 
 .blog-content ol li::marker {
-  color: hsl(38 55% 58%);
+  color: hsl(40 62% 62%);
   font-weight: 600;
 }
 
-/* ========================================
-   Blockquotes - Pull quotes
-   ======================================== */
-
 .blog-content blockquote {
   position: relative;
-  margin: 2rem 0;
-  padding: 1.5rem 2rem;
-  background: hsl(0 0% 8%);
-  border-left: 4px solid hsl(38 55% 58%);
-  border-radius: 0 0.25rem 0.25rem 0;
+  margin: 2.5rem 0;
+  padding: 1.75rem 2rem 1.75rem 2.25rem;
+  background: linear-gradient(120deg, hsl(28 12% 10%), hsl(22 14% 6%));
+  border-left: 2px solid hsl(40 62% 62%);
+  font-family: var(--font-display, "Bodoni Moda", serif);
   font-style: italic;
-  color: hsl(40 15% 80%);
+  font-size: 1.25rem;
+  line-height: 1.65;
+  color: hsl(38 26% 86%);
 }
 
 .blog-content blockquote p:last-child {
   margin-bottom: 0;
 }
 
-/* ========================================
-   Pro Tips and Callouts
-   ======================================== */
-
-.blog-content p strong:first-child {
-  color: hsl(38 55% 58%);
-}
-
-/* ========================================
-   Code and Preformatted Text
-   ======================================== */
-
 .blog-content code {
-  background: hsl(0 0% 12%);
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.875em;
-  color: hsl(38 55% 58%);
+  background: hsl(26 10% 13%);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+  color: hsl(44 70% 72%);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .blog-content pre {
-  background: hsl(0 0% 8%);
-  padding: 1.25rem 1.5rem;
-  border-radius: 0.25rem;
+  background: hsl(22 14% 6%);
+  padding: 1.4rem 1.6rem;
+  border-radius: 3px;
   overflow-x: auto;
   margin-bottom: 1.75rem;
-  border: 1px solid hsl(40 15% 18%);
+  border: 1px solid hsl(var(--border));
 }
 
 .blog-content pre code {
   background: transparent;
   padding: 0;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 
-/* ========================================
-   Images and Media
-   ======================================== */
-
 .blog-content img {
-  border-radius: 0.25rem;
-  margin: 2rem 0;
+  border-radius: 3px;
+  margin: 2.25rem 0;
   max-width: 100%;
   height: auto;
 }
 
-.blog-content figure {
-  margin: 2rem 0;
-}
-
 .blog-content figcaption {
   text-align: center;
-  font-size: 0.875rem;
-  color: hsl(40 10% 55%);
-  margin-top: 0.75rem;
-  font-style: italic;
+  font-size: 0.8125rem;
+  color: hsl(38 12% 58%);
+  margin-top: 0.85rem;
+  letter-spacing: 0.04em;
 }
-
-/* ========================================
-   Horizontal Rule
-   ======================================== */
 
 .blog-content hr {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent, hsl(38 55% 58% / 0.3), transparent);
-  margin: 3rem 0;
+  background: linear-gradient(90deg, transparent, hsl(40 62% 62% / 0.4), transparent);
+  margin: 3.5rem 0;
 }
-
-/* ========================================
-   Tables
-   ======================================== */
 
 .blog-content table {
   width: 100%;
@@ -400,121 +986,45 @@ html {
 
 .blog-content th {
   text-align: left;
-  padding: 0.875rem 1rem;
-  background: hsl(0 0% 8%);
-  border-bottom: 2px solid hsl(38 55% 58%);
+  padding: 0.9rem 1rem;
+  background: hsl(26 10% 10%);
+  border-bottom: 1px solid hsl(40 62% 62% / 0.5);
   font-weight: 600;
-  color: hsl(40 20% 95%);
+  color: hsl(40 32% 96%);
 }
 
 .blog-content td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid hsl(40 15% 18%);
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .blog-content tr:hover td {
-  background: hsl(0 0% 8%);
+  background: hsl(26 10% 9%);
 }
-
-/* ========================================
-   Drop Cap for first paragraph (optional)
-   ======================================== */
-
-.blog-content.drop-cap > p:first-of-type::first-letter {
-  float: left;
-  font-size: 4rem;
-  line-height: 0.8;
-  margin-right: 0.75rem;
-  margin-top: 0.25rem;
-  color: hsl(38 55% 58%);
-  font-family: ui-serif, Georgia, serif;
-  font-weight: 700;
-}
-
-/* ========================================
-   Reading Progress Indicator Space
-   ======================================== */
-
-.blog-post-header {
-  margin-bottom: 3rem;
-}
-
-/* ========================================
-   Responsive Adjustments
-   ======================================== */
 
 @media (max-width: 640px) {
   .blog-content {
     font-size: 1rem;
-    line-height: 1.75;
+    line-height: 1.8;
   }
-
   .blog-content h2 {
-    font-size: 1.5rem;
     margin-top: 2.5rem;
   }
-
-  .blog-content h3 {
-    font-size: 1.25rem;
-    margin-top: 2rem;
-  }
-
   .blog-content blockquote {
-    padding: 1rem 1.25rem;
-    margin: 1.5rem 0;
-  }
-
-  .blog-content ul,
-  .blog-content ol {
-    padding-left: 1.25rem;
+    padding: 1.25rem 1.35rem;
+    font-size: 1.075rem;
   }
 }
-
-/* ========================================
-   Print Styles for Blog
-   ======================================== */
 
 @media print {
   .blog-content {
-    color: black;
+    color: #000;
     font-size: 12pt;
-    line-height: 1.6;
   }
-
   .blog-content h2,
   .blog-content h3,
-  .blog-content h4 {
-    color: black;
-    page-break-after: avoid;
-  }
-
+  .blog-content h4,
   .blog-content a {
-    color: black;
-    text-decoration: underline;
+    color: #000;
   }
-}
-
-/* ========================================
-   Image Loading Animations
-   ======================================== */
-
-/* Shimmer animation for image skeletons */
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s ease-in-out infinite;
-  background: linear-gradient(
-    90deg,
-    hsl(var(--secondary)) 0%,
-    hsl(var(--muted)) 50%,
-    hsl(var(--secondary)) 100%
-  );
-  background-size: 200% 100%;
 }

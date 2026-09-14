@@ -1,139 +1,68 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence, Variants, Transition } from "framer-motion";
-import b1BrownLogo from "@/assets/logos/b1_brown_logo.png";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import b1Logo from "@/assets/logos/b1_brown_logo.png";
 
-interface PageTransitionProps {
-  children: ReactNode;
-  location?: string;
-}
+const EASE = [0.16, 1, 0.3, 1] as const;
 
-// Logo overlay variants for the loading transition
-const logoOverlayVariants: Variants = {
-  initial: {
-    opacity: 0,
-  },
-  enter: {
-    opacity: 1,
-    transition: {
-      duration: 0.15,
-      ease: "easeOut",
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-      ease: "easeIn",
-      delay: 0.1,
-    },
-  },
-};
-
-// Logo animation variants - subtle scale effect
-const logoVariants: Variants = {
-  initial: {
-    scale: 0.8,
-    opacity: 0,
-  },
-  enter: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      duration: 0.2,
-      ease: [0.4, 0, 0.2, 1] as Transition["ease"],
-    },
-  },
-  exit: {
-    scale: 1.05,
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-      ease: [0.4, 0, 0.6, 1] as Transition["ease"],
-    },
-  },
-};
-
-const pageVariants: Variants = {
-  initial: {
-    opacity: 0,
-    y: 20,
-  },
+const pageVariants = {
+  initial: { opacity: 0, y: 24 },
   enter: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.4,
-      ease: [0.4, 0, 0.2, 1] as Transition["ease"],
-      when: "beforeChildren",
-    } as Transition,
+    transition: { duration: 0.7, ease: EASE },
   },
   exit: {
     opacity: 0,
-    y: -20,
-    transition: {
-      duration: 0.3,
-      ease: [0.4, 0, 0.6, 1] as Transition["ease"],
-    } as Transition,
+    y: -12,
+    transition: { duration: 0.3, ease: [0.65, 0, 0.35, 1] as const },
   },
 };
 
-const contentVariants: Variants = {
-  initial: { opacity: 0, y: 30 },
-  enter: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.4, 0, 0.2, 1] as Transition["ease"],
-      delay: 0.1,
-    } as Transition,
-  },
-  exit: { 
-    opacity: 0, 
-    y: -30,
-    transition: {
-      duration: 0.3,
-      ease: [0.4, 0, 0.6, 1] as Transition["ease"],
-    } as Transition,
-  },
-};
-
-// Logo Loading Transition Component - shows during navigation
-export function LogoTransition() {
-  const location = useLocation();
-  const [isNavigating, setIsNavigating] = useState(false);
+/**
+ * Route-level cinema: a curtain lifts off every navigation while the incoming
+ * page settles into place. Deliberately brief so browsing never feels gated.
+ */
+function Curtain({ trigger }: { trigger: string }) {
+  const reduce = useReducedMotion();
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Start showing logo when location changes
-    setIsNavigating(true);
-    
-    // Hide logo after a short delay
-    const timer = setTimeout(() => {
-      setIsNavigating(false);
-    }, 400); // Total transition time
-
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
+    if (reduce) return;
+    setVisible(true);
+    const timer = window.setTimeout(() => setVisible(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [trigger, reduce]);
 
   return (
     <AnimatePresence>
-      {isNavigating && (
+      {visible && (
         <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/95 backdrop-blur-sm pointer-events-none"
-          variants={logoOverlayVariants}
-          initial="initial"
-          animate="enter"
-          exit="exit"
+          key={trigger}
+          className="pointer-events-none fixed inset-0 z-[950]"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.2 } }}
         >
+          <motion.div
+            className="absolute inset-x-0 top-0 bg-[hsl(20_14%_3.5%_/_0.97)]"
+            initial={{ height: "100%" }}
+            animate={{ height: "0%" }}
+            transition={{ duration: 0.9, ease: EASE }}
+          />
+          <motion.div
+            className="absolute inset-x-0 bottom-0 h-px bg-gradient-gold"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+          />
           <motion.img
-            src={b1BrownLogo}
-            alt="B1 Glam Studio"
-            className="w-64 h-64 md:w-96 md:h-96 object-contain"
-            variants={logoVariants}
-            initial="initial"
-            animate="enter"
-            exit="exit"
+            src={b1Logo}
+            alt=""
+            aria-hidden
+            className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 object-contain"
+            initial={{ opacity: 0, scale: 0.86, y: 8 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [0.86, 1, 1, 0.96], y: [8, 0, 0, -10] }}
+            transition={{ duration: 0.85, ease: EASE, times: [0, 0.3, 0.6, 1] }}
           />
         </motion.div>
       )}
@@ -141,22 +70,32 @@ export function LogoTransition() {
   );
 }
 
-export function PageTransition({ children, location }: PageTransitionProps) {
+interface PageTransitionProps {
+  children: ReactNode;
+  location?: string;
+  /** Admin routes use the plain fade — the staff portal should feel like tooling. */
+  withCurtain?: boolean;
+}
+
+export function PageTransition({ children, location, withCurtain = true }: PageTransitionProps) {
+  const route = useLocation();
+  const key = location ?? route.pathname;
+
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location}
-        variants={pageVariants}
-        initial="initial"
-        animate="enter"
-        exit="exit"
-      >
-        <motion.div variants={contentVariants}>
+    <>
+      {withCurtain && <Curtain trigger={key} />}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={key} variants={pageVariants} initial="initial" animate="enter" exit="exit">
           {children}
         </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
+}
+
+/** Retained for backwards compatibility — the curtain above supersedes it. */
+export function LogoTransition() {
+  return null;
 }
 
 export default PageTransition;

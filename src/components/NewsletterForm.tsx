@@ -1,45 +1,56 @@
-import { useState } from 'react';
-import { Mail, Check, Loader2, Sparkles } from 'lucide-react';
-import { api } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { Check, Loader2, Send } from "lucide-react";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface NewsletterFormProps {
   source?: string;
   className?: string;
 }
 
-export function NewsletterForm({ source = 'website', className = '' }: NewsletterFormProps) {
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+export function NewsletterForm({ source = "website", className = "" }: NewsletterFormProps) {
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !email.includes('@')) {
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const value = email.trim();
+
+    if (!EMAIL_PATTERN.test(value)) {
       toast({
-        title: 'Please enter a valid email address',
-        variant: 'destructive',
+        title: "Check that email",
+        description: "It looks like there's a typo — we need a valid address to send beauty notes.",
+        variant: "destructive",
       });
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await api.newsletter.subscribe(email, source);
+      const res = await api.newsletter.subscribe(value, source);
       if (res.success) {
         setSubscribed(true);
         toast({
-          title: 'Subscribed to B1touch Beauty Newsletter! ✨',
-          description: 'Thank you for joining our exclusive beauty community.',
+          title: "You're on the list",
+          description: "Welcome to the B1touch beauty circle.",
         });
-        setEmail('');
+        setEmail("");
+      } else {
+        toast({
+          title: "Subscription failed",
+          description: res.error || "Please try again in a moment.",
+          variant: "destructive",
+        });
       }
-    } catch {
+    } catch (error) {
       toast({
-        title: 'Subscription failed',
-        description: 'Please try again later.',
-        variant: 'destructive',
+        title: "Subscription failed",
+        description: error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -48,35 +59,40 @@ export function NewsletterForm({ source = 'website', className = '' }: Newslette
 
   if (subscribed) {
     return (
-      <div className={`p-4 bg-primary/10 border border-primary/30 rounded-sm text-center ${className}`}>
-        <p className="text-xs font-sans font-semibold text-primary flex items-center justify-center gap-1.5">
-          <Check size={14} /> You're on the VIP list! Check your inbox for updates.
+      <div
+        className={`flex items-center gap-3 rounded-sm border border-gold/30 bg-gold/[0.07] px-5 py-4 ${className}`}
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-gold">
+          <Check size={15} className="text-primary-foreground" />
+        </span>
+        <p className="font-sans text-sm text-foreground/90">
+          You're on the VIP list — watch your inbox for the next drop.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row gap-2 max-w-md mx-auto ${className}`}>
-      <div className="relative flex-1">
-        <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email address"
-          className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-sm text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-        />
+    <form onSubmit={handleSubmit} className={`w-full ${className}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+        <div className="relative flex-1">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="your@email.com"
+            aria-label="Email address"
+            className="field h-full pr-4"
+          />
+        </div>
+        <button type="submit" disabled={submitting} className="btn btn-gold shine sm:w-auto">
+          {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+          {submitting ? "Joining" : "Subscribe"}
+        </button>
       </div>
-      <button
-        type="submit"
-        disabled={submitting}
-        className="px-6 py-3 bg-gradient-gold text-primary-foreground font-sans font-semibold text-xs uppercase tracking-wider rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center justify-center gap-1.5 shrink-0"
-      >
-        {submitting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-        Subscribe
-      </button>
     </form>
   );
 }
+
+export default NewsletterForm;

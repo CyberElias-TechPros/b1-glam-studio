@@ -1,473 +1,664 @@
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { useRef, useState, useEffect, useMemo } from "react";
-import { ArrowRight, Star, Sparkles, Crown, Camera, Heart, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import {
+  ArrowUpRight,
+  Camera,
+  Crown,
+  Quote,
+  Sparkles,
+  Star,
+  ZoomIn,
+} from "lucide-react";
 import Layout from "@/components/Layout";
-import { AnimatedSection, SectionHeading, ParallaxCard, StaggerContainer, StaggerItem } from "@/components/AnimatedSection";
-import { ParallaxHero } from "@/components/ParallaxHero";
-import { GoldParticles } from "@/components/GoldParticles";
+import Lightbox from "@/components/Lightbox";
 import { InstagramFeed } from "@/components/InstagramFeed";
-import { getImages } from "@/lib/portfolioImages";
-import { WebPImage } from "@/components/WebPImage";
+import { getImages, sourcesFor } from "@/lib/portfolioImages";
+import {
+  Counter,
+  EASE,
+  Magnetic,
+  Marquee,
+  Ornament,
+  Parallax,
+  Reveal,
+  RevealMedia,
+  ScrollCue,
+  SectionIndex,
+  SplitText,
+  TiltCard,
+} from "@/components/motion/Reveal";
 import heroImage from "@/assets/hero-beauty.jpg";
 
 const services = [
-  { icon: Crown, title: "Bridal Glam", desc: "Timeless elegance for your perfect day. Traditional & white wedding looks." },
-  { icon: Sparkles, title: "Event & Owambe", desc: "Head-turning glam for every occasion. Aso-ebi, birthdays & parties." },
-  { icon: Camera, title: "Editorial & Studio", desc: "Camera-ready perfection for photoshoots, campaigns & content creation." },
+  {
+    icon: Crown,
+    index: "01",
+    title: "Bridal",
+    subtitle: "Traditional & white wedding",
+    desc: "A look engineered for the longest day of your life — humidity-proof, camera-proof, tear-proof.",
+    from: "₦225,000",
+  },
+  {
+    icon: Sparkles,
+    index: "02",
+    title: "Owambe & Events",
+    subtitle: "Parties, aso-ebi, celebrations",
+    desc: "Sculpted, luminous and impossible to ignore. Built to survive the dancing.",
+    from: "₦100,000",
+  },
+  {
+    icon: Camera,
+    index: "03",
+    title: "Editorial",
+    subtitle: "Campaigns, film & content",
+    desc: "Colour-true finishes for HD, 4K and studio lighting — continuity handled.",
+    from: "₦150,000",
+  },
 ];
 
-const portfolioImagesData = getImages(6, 100);
-const portfolioItems = [
-  { category: "Bridal", gradient: "from-amber-900/60 via-yellow-800/40 to-yellow-700/20", image: portfolioImagesData[0] },
-  { category: "Event Glam", gradient: "from-amber-800/60 via-orange-700/40 to-yellow-600/20", image: portfolioImagesData[1] },
-  { category: "Editorial", gradient: "from-yellow-900/60 via-amber-800/40 to-orange-700/20", image: portfolioImagesData[2] },
-  { category: "Dark Skin", gradient: "from-amber-700/60 via-yellow-600/40 to-orange-500/20", image: portfolioImagesData[3] },
-  { category: "Bold Look", gradient: "from-yellow-800/60 via-amber-700/40 to-orange-600/20", image: portfolioImagesData[4] },
-  { category: "Soft Glam", gradient: "from-amber-600/60 via-yellow-500/40 to-orange-400/20", image: portfolioImagesData[5] },
+const process = [
+  {
+    step: "I.",
+    title: "Consultation",
+    copy: "We study your skin, your undertone and your occasion — in the studio or over WhatsApp — before a single brush moves.",
+  },
+  {
+    step: "II.",
+    title: "Prep & Prime",
+    copy: "Skin is prepped with a barrier-first routine so the finish reads as skin, never as product.",
+  },
+  {
+    step: "III.",
+    title: "The Build",
+    copy: "Pigment laid in thin, deliberate layers matched to your undertone. Depth without heaviness.",
+  },
+  {
+    step: "IV.",
+    title: "Lock & Leave",
+    copy: "Set, photographed in studio light, and finished with a touch-up kit and a maintenance plan.",
+  },
 ];
 
 const testimonials = [
-  { name: "Adaeze N.", event: "Bride", quote: "B1touch made me feel like royalty on my wedding day. My skin looked absolutely flawless in every photo!" },
-  { name: "Funke A.", event: "Birthday Glam", quote: "I've never received so many compliments! The makeup lasted all night through the dancing and photos." },
-  { name: "Chidinma O.", event: "Owambe", quote: "Finally, a makeup artist who truly understands dark skin tones. Pure perfection every single time." },
+  {
+    name: "Adaeze N.",
+    event: "Bride · Lekki",
+    quote: "B1touch made me feel like royalty on my wedding day. My skin looked flawless in every single photo — even at 11pm.",
+  },
+  {
+    name: "Funke A.",
+    event: "Birthday Glam",
+    quote: "I have never received so many compliments. The makeup survived dancing, tears and Lagos heat.",
+  },
+  {
+    name: "Chidinma O.",
+    event: "Owambe",
+    quote: "Finally, an artist who truly understands dark skin tones. The match was seamless — pure perfection.",
+  },
 ];
 
-// ─── Lightbox Component ─────────────────────────────────────────────
-function Lightbox({ images, currentIndex, onClose, onNavigate }: { images: string[]; currentIndex: number; onClose: () => void; onNavigate: (i: number) => void }) {
-  const [zoom, setZoom] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
+const stats = [
+  { value: 500, suffix: "+", label: "Brides served" },
+  { value: 8, suffix: " yrs", label: "Behind the brush" },
+  { value: 1000, suffix: "+", label: "Clients styled" },
+  { value: 4.9, suffix: "★", label: "Average rating", decimals: true },
+];
 
-  // Reset zoom when image changes
-  useEffect(() => {
-    setZoom(1);
-    setPosition({ x: 0, y: 0 });
-  }, [currentIndex]);
-
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") onNavigate((currentIndex + 1) % images.length);
-      if (e.key === "ArrowLeft") onNavigate((currentIndex - 1 + images.length) % images.length);
-      if (e.key === "+" || e.key === "=") setZoom((z) => Math.min(z + 0.5, 3));
-      if (e.key === "-") setZoom((z) => Math.max(z - 0.5, 1));
-      if (e.key === "0") { setZoom(1); setPosition({ x: 0, y: 0 }); }
-    };
-    document.addEventListener("keydown", h);
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
-  }, [currentIndex, images.length, onClose, onNavigate]);
-
-  // Touch swipe handling
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (zoom > 1) return;
-    dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (zoom > 1) return;
-    const deltaX = e.changedTouches[0].clientX - dragStart.current.x;
-    const threshold = 50;
-    
-    if (Math.abs(deltaX) > threshold) {
-      if (deltaX > 0) {
-        onNavigate((currentIndex - 1 + images.length) % images.length);
-      } else {
-        onNavigate((currentIndex + 1) % images.length);
-      }
-    }
-  };
-
-  // Mouse drag for zoomed images
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoom > 1) {
-      setIsDragging(true);
-      dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && zoom > 1) {
-      setPosition({
-        x: e.clientX - dragStart.current.x,
-        y: e.clientY - dragStart.current.y
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const toggleZoom = () => {
-    if (zoom === 1) {
-      setZoom(2);
-    } else {
-      setZoom(1);
-      setPosition({ x: 0, y: 0 });
-    }
-  };
+function Hero({ onOpenGallery }: { onOpenGallery: () => void }) {
+  const ref = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const imageY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "16%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "-8%"]);
+  const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }} 
-      className="fixed inset-0 z-50 flex items-center justify-center"
+    <section
+      ref={ref}
+      className="relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pb-24 pt-36 sm:pb-28"
     >
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onClose} />
-      
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent">
-        <span className="text-sm text-white/70 font-sans">{currentIndex + 1} / {images.length}</span>
-        <div className="flex gap-2">
-          <button 
-            onClick={toggleZoom}
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-            aria-label={zoom > 1 ? "Zoom out" : "Zoom in"}
-          >
-            {zoom > 1 ? <ZoomOut className="w-5 h-5 text-white" /> : <ZoomIn className="w-5 h-5 text-white" />}
-          </button>
-          <button 
-            onClick={onClose} 
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-            aria-label="Close lightbox"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-        </div>
-      </div>
+      {/* Cinematic backdrop */}
+      <motion.div className="absolute inset-0 -z-20" style={{ y: imageY }}>
+        <img
+          src={heroImage}
+          alt="Close-up of flawless luxury glam on deep skin tones"
+          {...{ fetchpriority: "high" }}
+          decoding="async"
+          className="h-[116%] w-full object-cover object-[62%_28%] animate-slow-drift"
+        />
+      </motion.div>
 
-      {/* Main image */}
-      <div 
-        className="relative z-10 flex items-center justify-center w-full h-full"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <AnimatePresence mode="wait">
-          <motion.img 
-            key={currentIndex} 
-            src={images[currentIndex]} 
-            alt="" 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            exit={{ opacity: 0 }} 
-            transition={{ duration: 0.3 }}
-            style={{
-              transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
-              cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
-            }}
-            className="max-h-[85vh] max-w-[90vw] object-contain rounded-sm transition-transform duration-200"
-            draggable={false}
-          />
-        </AnimatePresence>
-      </div>
+      {/* Grading layers */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(90deg,hsl(20_14%_3.5%_/_0.96)_0%,hsl(20_14%_3.5%_/_0.78)_38%,hsl(20_14%_4%_/_0.22)_70%,hsl(20_14%_4%_/_0.55)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(0deg,hsl(20_14%_4%)_2%,transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_85%_10%,hsl(40_62%_62%_/_0.22),transparent_58%)]" />
+      <div className="grain pointer-events-none absolute inset-0 -z-10" />
 
-      {/* Navigation arrows */}
-      <button 
-        onClick={() => onNavigate((currentIndex - 1 + images.length) % images.length)} 
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/25 transition-colors"
-        aria-label="Previous image"
-      >
-        <ChevronLeft className="w-6 h-6 text-white" />
-      </button>
-      <button 
-        onClick={() => onNavigate((currentIndex + 1) % images.length)} 
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/25 transition-colors"
-        aria-label="Next image"
-      >
-        <ChevronRight className="w-6 h-6 text-white" />
-      </button>
+      <motion.div className="shell relative" style={{ y: contentY, opacity: fade }}>
+        <div className="grid items-end gap-12 lg:grid-cols-[1.35fr_0.65fr]">
+          <div>
+            <Reveal variant="fade" delay={0.35} duration={1.2}>
+              <div className="mb-7 flex flex-wrap items-center gap-4">
+                <span className="eyebrow">Lagos · Est. 2017</span>
+                <span className="hidden h-px w-16 bg-gold/40 sm:block" />
+                <span className="eyebrow-muted">Addo Road · Ajah</span>
+              </div>
+            </Reveal>
 
-      {/* Bottom bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/50 to-transparent">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-sans font-semibold uppercase tracking-widest text-primary">{portfolioItems[currentIndex]?.category || "Portfolio"}</span>
-          <Link to="/portfolio" onClick={onClose} className="px-5 py-2 text-xs font-sans font-semibold uppercase tracking-wider bg-gradient-gold text-primary-foreground rounded-sm hover:opacity-90 transition-opacity">View Full Portfolio</Link>
-        </div>
-        
-        {/* Thumbnail strip */}
-        <div className="flex gap-1.5 overflow-x-auto pb-2 justify-center scrollbar-hide">
-          {images.slice(Math.max(0, currentIndex - 4), Math.min(images.length, currentIndex + 5)).map((img, i) => {
-            const ri = Math.max(0, currentIndex - 4) + i;
-            return (
-              <button 
-                key={ri} 
-                onClick={() => onNavigate(ri)} 
-                className={`flex-shrink-0 w-14 h-14 rounded-sm overflow-hidden transition-all duration-200 ${ri === currentIndex ? "ring-2 ring-primary scale-110" : "opacity-50 hover:opacity-80"}`}
-              >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+            <SplitText
+              as="h1"
+              text="Flawless artistry for every shade"
+              highlightFrom={3}
+              className="display-xl max-w-[15ch] text-foreground"
+              delay={0.5}
+              stagger={0.075}
+            />
+
+            <Reveal variant="up" delay={1.05} className="mt-8 max-w-xl">
+              <p className="lede">
+                Lagos' premier makeup studio for melanin-rich skin — bridal, owambe and editorial looks
+                composed with the discipline of couture and the warmth of home.
+              </p>
+            </Reveal>
+
+            <Reveal variant="up" delay={1.2} className="mt-10 flex flex-wrap items-center gap-4">
+              <Magnetic strength={0.22}>
+                <Link to="/booking" className="btn btn-gold shine">
+                  Book your session
+                  <ArrowUpRight size={14} />
+                </Link>
+              </Magnetic>
+              <button onClick={onOpenGallery} className="btn btn-outline" data-cursor="view" data-cursor-label="View">
+                See the work
               </button>
+            </Reveal>
+
+            <Reveal variant="fade" delay={1.5} className="mt-14 grid max-w-2xl grid-cols-3 gap-6 border-t border-border/60 pt-7">
+              {[
+                { value: "500+", label: "Brides served" },
+                { value: "4.9★", label: "Client rating" },
+                { value: "8 yrs", label: "In the industry" },
+              ].map((item) => (
+                <div key={item.label}>
+                  <div className="numeral text-2xl text-gradient-gold sm:text-3xl">{item.value}</div>
+                  <div className="eyebrow-muted mt-2">{item.label}</div>
+                </div>
+              ))}
+            </Reveal>
+          </div>
+
+          {/* Floating portrait card */}
+          <Reveal variant="scale" delay={1.35} className="hidden lg:block">
+            <Parallax distance={34}>
+              <div className="relative ml-auto w-full max-w-[19rem]">
+                <div className="panel spotlight overflow-hidden rounded-sm p-2 animate-float-soft">
+                  <RevealMedia
+                    src={getImages(1, 40)[0]}
+                    alt="Signature B1touch bridal look"
+                    ratio="4 / 5"
+                    parallax={12}
+                    className="rounded-sm"
+                  />
+                  <div className="flex items-center justify-between px-2 pb-1 pt-3">
+                    <span className="eyebrow-muted">Signature look</span>
+                    <span className="numeral text-[0.6875rem] text-gold/70">№ 041</span>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute -bottom-5 -left-5 h-24 w-24 border border-gold/25" />
+              </div>
+            </Parallax>
+          </Reveal>
+        </div>
+      </motion.div>
+
+      {/* Bottom rail */}
+      <div className="shell relative mt-16 flex items-end justify-between gap-8">
+        <div className="hidden lg:block">
+          <ScrollCue label="Scroll to explore" />
+        </div>
+        <div className="flex items-center gap-5">
+          <span className="eyebrow-muted hidden sm:inline">Studio WhatsApp</span>
+          <a
+            href="https://wa.me/2348061651126"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-draw font-sans text-sm text-foreground/85 transition-colors hover:text-gold-light"
+          >
+            +234 806 165 1126
+          </a>
+        </div>
+      </div>
+
+      {/* Rotated edge label */}
+      <span className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rotate-90 font-sans text-[0.625rem] uppercase tracking-[0.5em] text-muted-foreground/60 xl:block">
+        B1touch Artistry
+      </span>
+    </section>
+  );
+}
+
+function TickerBand() {
+  return (
+    <div className="relative border-y border-gold/25 bg-gradient-gold">
+      <Marquee
+        items={["Bridal", "Owambe", "Editorial", "Film & TV", "Masterclass", "Dark skin specialists"]}
+        itemClassName="font-display text-lg uppercase tracking-[0.24em] text-[hsl(20_14%_5%)] sm:text-2xl"
+        className="py-3.5"
+        separator="✦"
+        slow
+      />
+    </div>
+  );
+}
+
+function Manifesto() {
+  return (
+    <section className="section-y relative overflow-hidden">
+      <div className="pointer-events-none absolute -right-24 top-16 h-72 w-72 rounded-full bg-[radial-gradient(circle,hsl(344_34%_24%_/_0.5),transparent_70%)] blur-2xl" />
+      <div className="shell grid gap-14 lg:grid-cols-[0.85fr_1fr] lg:gap-20">
+        <div className="lg:sticky lg:top-32 lg:self-start">
+          <SectionIndex index="01" label="The Studio" className="mb-8" />
+          <SplitText
+            as="h2"
+            text="Where dark skin meets its perfect canvas"
+            highlightFrom={4}
+            className="display-lg"
+          />
+          <Reveal variant="fade" delay={0.3} className="mt-10 hidden lg:block">
+            <RevealMedia
+              src={getImages(1, 88)[0]}
+              alt="Artist at work inside the Ajah studio"
+              ratio="4 / 3"
+              parallax={26}
+              className="rounded-sm"
+            />
+            <p className="mt-4 font-sans text-xs leading-relaxed text-muted-foreground">
+              The studio on Addo Road — where every session begins with light testing.
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="space-y-8">
+          <Reveal variant="up">
+            <p className="lede max-w-2xl">
+              B1touch Artistry was built on a frustration: too many artists working on melanin-rich skin
+              without understanding undertone, texture or how pigment behaves under Lagos light. So we
+              built a house that does nothing else.
+            </p>
+          </Reveal>
+          <Reveal variant="up" delay={0.1}>
+            <p className="max-w-2xl font-sans text-[0.95rem] leading-[1.9] text-muted-foreground">
+              Every look starts with skin — its chemistry, its history, its season. From there we compose:
+              a bridal finish that reads as polish from across a hall and as skin from 30 centimetres away;
+              an editorial finish calibrated for studio strobes and 4K capture.
+            </p>
+          </Reveal>
+
+          <Reveal variant="up" delay={0.18}>
+            <div className="grid gap-px overflow-hidden rounded-sm border border-border/70 bg-border/40 sm:grid-cols-3">
+              {[
+                { title: "Undertone-first", copy: "Pigment matched to your chemistry, never to a shade chart." },
+                { title: "Longevity", copy: "Engineered for 12+ hour events, humidity and dancing." },
+                { title: "Camera-tested", copy: "Every finish photographed in studio light before you leave." },
+              ].map((item) => (
+                <div key={item.title} className="bg-[hsl(22_13%_6%)] p-6">
+                  <h3 className="font-display text-lg">{item.title}</h3>
+                  <p className="mt-2.5 font-sans text-[0.8125rem] leading-relaxed text-muted-foreground">
+                    {item.copy}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal variant="up" delay={0.24}>
+            <Link
+              to="/about"
+              className="link-draw inline-flex items-center gap-2 font-sans text-sm uppercase tracking-[0.2em] text-gold-light"
+            >
+              Read our story <ArrowUpRight size={14} />
+            </Link>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SignatureServices() {
+  const images = useMemo(() => getImages(3, 120), []);
+
+  return (
+    <section className="section-y relative border-y border-border/60 bg-[hsl(22_13%_5%)]">
+      <div className="shell">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <SectionIndex index="02" label="Signature services" className="mb-7" />
+            <SplitText as="h2" text="Artistry for every occasion" className="display-lg max-w-[22ch]" />
+          </div>
+          <Reveal variant="up" delay={0.2}>
+            <Link
+              to="/services"
+              className="link-draw inline-flex items-center gap-2 font-sans text-sm uppercase tracking-[0.2em] text-gold-light"
+            >
+              All services & pricing <ArrowUpRight size={14} />
+            </Link>
+          </Reveal>
+        </div>
+
+        <div className="mt-16 grid gap-6 md:grid-cols-3">
+          {services.map((service, i) => (
+            <Reveal key={service.title} variant="up" delay={i * 0.12}>
+              <TiltCard className="group flex h-full flex-col rounded-sm">
+                <div className="relative overflow-hidden">
+                  <RevealMedia
+                    src={images[i]}
+                    alt={`${service.title} makeup by B1touch Artistry`}
+                    ratio="4 / 5"
+                    parallax={18}
+                    className="rounded-none"
+                  />
+                  <span className="absolute left-5 top-5 numeral text-sm text-gold-light/90">
+                    {service.index}
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 translate-y-3 p-5 opacity-0 transition-all duration-700 ease-expo group-hover:translate-y-0 group-hover:opacity-100">
+                    <Link to="/booking" className="btn btn-gold btn-sm w-full">
+                      Book {service.title}
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col p-6">
+                  <service.icon className="h-5 w-5 text-gold" />
+                  <h3 className="mt-5 font-display text-2xl">{service.title}</h3>
+                  <p className="eyebrow-muted mt-2">{service.subtitle}</p>
+                  <p className="mt-4 flex-1 font-sans text-[0.8125rem] leading-relaxed text-muted-foreground">
+                    {service.desc}
+                  </p>
+                  <div className="mt-6 flex items-center justify-between border-t border-border/70 pt-4">
+                    <span className="font-sans text-[0.6875rem] uppercase tracking-[0.2em] text-muted-foreground">
+                      From
+                    </span>
+                    <span className="font-display text-lg text-gradient-gold">{service.from}</span>
+                  </div>
+                </div>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GalleryPreview({ onOpen }: { onOpen: (index: number) => void }) {
+  const images = useMemo(() => getImages(6, 0), []);
+  const labels = ["Bridal", "Editorial", "Owambe", "Dark Skin", "Bold", "Soft Glam"];
+
+  return (
+    <section className="section-y relative overflow-hidden">
+      <div className="shell">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <SectionIndex index="03" label="Selected work" className="mb-7" />
+            <SplitText as="h2" text="The gallery" className="display-lg" />
+          </div>
+          <Reveal variant="up" delay={0.15}>
+            <p className="max-w-sm font-sans text-sm leading-relaxed text-muted-foreground">
+              Every face tells a story. Tap any look to open it full-screen, then swipe through the set.
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="mt-14 grid auto-rows-[minmax(0,1fr)] grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {images.map((image, i) => {
+            const featured = i === 0 || i === 5;
+            return (
+              <Reveal
+                key={image}
+                variant="up"
+                delay={i * 0.07}
+                className={featured ? "col-span-2 row-span-2" : ""}
+              >
+                <div
+                  className="group relative h-full overflow-hidden rounded-sm"
+                  onClick={() => onOpen(i)}
+                  data-cursor="view"
+                  data-cursor-label="View"
+                >
+                  <RevealMedia
+                    src={image}
+                    alt={`${labels[i]} makeup look by B1touch Artistry`}
+                    ratio={featured ? "1 / 1" : "3 / 4"}
+                    parallax={22}
+                    className="h-full rounded-sm"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[hsl(20_14%_3%_/_0.85)] via-transparent to-transparent opacity-70 transition-opacity duration-700 group-hover:opacity-95" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between p-5">
+                    <span className="font-display text-lg text-foreground sm:text-xl">{labels[i]}</span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/40 bg-[hsl(20_14%_4%_/_0.5)] text-gold-light opacity-0 transition-all duration-500 ease-expo group-hover:opacity-100">
+                      <ZoomIn size={15} />
+                    </span>
+                  </div>
+                </div>
+              </Reveal>
             );
           })}
         </div>
 
-        {/* Zoom indicator */}
-        {zoom > 1 && (
-          <div className="text-center mt-2">
-            <span className="text-xs text-white/50">{Math.round(zoom * 100)}% • Press 0 to reset</span>
-          </div>
-        )}
+        <Reveal variant="up" className="mt-12 flex justify-center">
+          <Magnetic strength={0.2}>
+            <Link to="/portfolio" className="btn btn-outline">
+              View full portfolio
+              <ArrowUpRight size={14} />
+            </Link>
+          </Magnetic>
+        </Reveal>
       </div>
-    </motion.div>
+    </section>
+  );
+}
+
+function Standard() {
+  const image = useMemo(() => getImages(1, 64)[0], []);
+
+  return (
+    <section className="section-y relative border-y border-border/60 bg-[hsl(22_13%_5%)]">
+      <div className="shell grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+        <div className="lg:sticky lg:top-32 lg:self-start">
+          <SectionIndex index="04" label="The method" className="mb-7" />
+          <SplitText as="h2" text="Four deliberate moves" className="display-lg max-w-[14ch]" />
+          <Reveal variant="fade" delay={0.2} className="mt-10">
+            <RevealMedia
+              src={image}
+              alt="Detail of a B1touch finish under studio light"
+              ratio="5 / 6"
+              parallax={30}
+              className="rounded-sm lg:max-w-md"
+            />
+          </Reveal>
+        </div>
+
+        <ol className="divide-y divide-border/70 border-y border-border/70">
+          {process.map((item, i) => (
+            <Reveal key={item.step} variant="up" delay={i * 0.08}>
+              <li className="group grid gap-4 py-9 sm:grid-cols-[4rem_1fr] sm:gap-8">
+                <span className="numeral text-xl text-gold/80 transition-colors duration-500 group-hover:text-gold-light">
+                  {item.step}
+                </span>
+                <div>
+                  <h3 className="font-display text-2xl text-foreground">{item.title}</h3>
+                  <p className="mt-3 max-w-xl font-sans text-sm leading-[1.85] text-muted-foreground">
+                    {item.copy}
+                  </p>
+                </div>
+              </li>
+            </Reveal>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+function StatsBand() {
+  return (
+    <section className="relative py-20 sm:py-24">
+      <div className="shell">
+        <Ornament className="mx-auto mb-14 max-w-2xl" />
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat, i) => (
+            <Reveal key={stat.label} variant="up" delay={i * 0.08} className="text-center">
+              <div className="numeral text-4xl text-gradient-gold sm:text-5xl">
+                <Counter
+                  value={stat.value}
+                  suffix={stat.suffix}
+                  duration={1800}
+                />
+              </div>
+              <p className="eyebrow-muted mt-4">{stat.label}</p>
+            </Reveal>
+          ))}
+        </div>
+        <Ornament className="mx-auto mt-14 max-w-2xl rotate-180" />
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsStrip() {
+  return (
+    <section className="section-y relative border-y border-border/60 bg-[hsl(22_13%_5%)]">
+      <div className="shell">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <SectionIndex index="05" label="Client love" className="mb-7" />
+            <SplitText as="h2" text="Words from our queens" className="display-lg" />
+          </div>
+          <Reveal variant="up" delay={0.15}>
+            <Link
+              to="/testimonials"
+              className="link-draw inline-flex items-center gap-2 font-sans text-sm uppercase tracking-[0.2em] text-gold-light"
+            >
+              All reviews <ArrowUpRight size={14} />
+            </Link>
+          </Reveal>
+        </div>
+
+        <div className="mt-14 grid gap-6 md:grid-cols-3">
+          {testimonials.map((item, i) => (
+            <Reveal key={item.name} variant="up" delay={i * 0.1}>
+              <figure className="panel group flex h-full flex-col rounded-sm p-7">
+                <Quote className="h-7 w-7 text-gold/40" />
+                <blockquote className="mt-5 flex-1 font-display text-[1.35rem] leading-[1.5] text-foreground/90">
+                  {item.quote}
+                </blockquote>
+                <div className="mt-6 flex gap-1">
+                  {[0, 1, 2, 3, 4].map((star) => (
+                    <Star key={star} size={13} className="fill-gold text-gold" />
+                  ))}
+                </div>
+                <figcaption className="mt-5 border-t border-border/70 pt-4">
+                  <span className="font-display text-lg">{item.name}</span>
+                  <span className="eyebrow-muted mt-1.5 block">{item.event}</span>
+                </figcaption>
+              </figure>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Finale() {
+  return (
+    <section className="relative isolate overflow-hidden">
+      <div className="absolute inset-0 -z-20">
+        <img
+          src={getImages(1, 200)[0]}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover object-center animate-slow-drift"
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,hsl(20_14%_4%_/_0.92),hsl(20_14%_3%_/_0.86))]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_50%_120%,hsl(40_62%_62%_/_0.28),transparent_65%)]" />
+      <div className="grain pointer-events-none absolute inset-0 -z-10" />
+
+      <div className="shell relative py-28 text-center sm:py-36">
+        <Reveal variant="fade">
+          <Ornament className="mx-auto mb-8 max-w-sm" />
+        </Reveal>
+        <SplitText
+          as="h2"
+          text="Ready to glow?"
+          className="display-xl mx-auto text-center"
+          highlightFrom={2}
+        />
+        <Reveal variant="up" delay={0.25}>
+          <p className="lede mx-auto mt-7 max-w-xl text-center">
+            Sessions are limited each month so every client gets the studio's full attention.
+            Reserve your date and we'll handle the rest.
+          </p>
+        </Reveal>
+        <Reveal variant="up" delay={0.35} className="mt-11 flex flex-wrap justify-center gap-4">
+          <Magnetic strength={0.22}>
+            <Link to="/booking" className="btn btn-gold shine">
+              Reserve your session
+              <ArrowUpRight size={14} />
+            </Link>
+          </Magnetic>
+          <a
+            href="https://wa.me/2348061651126"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-ghost"
+          >
+            Chat on WhatsApp
+          </a>
+        </Reveal>
+        <Reveal variant="fade" delay={0.5}>
+          <p className="eyebrow-muted mt-10">Addo Road · Ajah · Lagos · +234 806 165 1126</p>
+        </Reveal>
+      </div>
+    </section>
   );
 }
 
 export default function Index() {
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  // Lightbox state
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const lightboxImages = useMemo(() => portfolioItems.map((item) => item.image), []);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const galleryImages = useMemo(() => getImages(6, 0), []);
 
   return (
     <Layout>
-      {/* Hero Section with Parallax */}
-      <ParallaxHero backgroundImage={heroImage}>
-        <div className="relative z-10 container-narrow mx-auto px-4 sm:px-6 lg:px-8 py-32">
-          <div className="max-w-2xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <span className="inline-block text-xs font-sans font-semibold uppercase tracking-[0.4em] text-primary mb-6">
-                Premium Makeup Artistry · Lagos
-              </span>
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold leading-[1.1] mb-6"
-            >
-              Flawless Artistry
-              <br />
-              <span className="text-gradient-gold">for Every Shade</span>
-              <br />
-              of Beauty
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-lg text-muted-foreground mb-8 max-w-lg leading-relaxed"
-            >
-              Lagos' premier destination for luxury makeup & dark skin expertise.
-              Located in the heart of Ajah.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex flex-wrap gap-4"
-            >
-              <Link
-                to="/booking"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide bg-gradient-gold text-primary-foreground hover:opacity-90 transition-all rounded-sm gold-glow"
-              >
-                Book Your Session
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/portfolio"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide border border-primary/40 text-primary hover:bg-primary/10 transition-all rounded-sm"
-              >
-                View Portfolio
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-          <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-px h-8 bg-gradient-to-b from-primary to-transparent"
-          />
-        </motion.div>
-      </ParallaxHero>
-
-      {/* Services Preview with Parallax Cards */}
-      <section className="section-padding bg-background relative">
-        <GoldParticles count={10} className="opacity-50" />
-        <div className="container-narrow mx-auto">
-          <SectionHeading
-            subtitle="What We Do"
-            title="Artistry for Every Occasion"
-            description="From bridal elegance to bold editorial looks, we craft flawless beauty tailored to your unique skin and style."
-          />
-          <StaggerContainer delay={0.2} staggerDelay={0.15}>
-            {services.map((service, i) => (
-              <StaggerItem key={service.title}>
-                <ParallaxCard offset={15} className="h-full">
-                  <div className="group p-8 rounded-sm bg-card border border-border hover:border-primary/40 transition-all duration-500 h-full">
-                    <service.icon className="w-8 h-8 text-primary mb-6 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-serif font-semibold mb-3">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{service.desc}</p>
-                  </div>
-                </ParallaxCard>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-          <AnimatedSection delay={0.4}>
-            <div className="text-center mt-10">
-              <Link
-                to="/services"
-                className="inline-flex items-center gap-2 text-sm font-sans text-primary hover:text-gold-light transition-colors"
-              >
-                View All Services & Pricing <ArrowRight size={14} />
-              </Link>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* Portfolio Preview */}
-      <section className="section-padding bg-secondary">
-        <div className="container-narrow mx-auto">
-          <SectionHeading
-            subtitle="Our Work"
-            title="The B1touch Gallery"
-            description="Every face tells a story. See how we bring out the best in every shade of beauty."
-          />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            {portfolioItems.map((item, i) => (
-              <AnimatedSection key={item.category} delay={i * 0.1} animation="fade-up">
-                <div 
-                  onClick={() => setLightbox(i)}
-                  className="group block relative overflow-hidden rounded-sm aspect-[3/4] cursor-pointer"
-                >
-                  <WebPImage 
-                    src={item.image}
-                    alt={item.category}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} group-hover:opacity-40 transition-opacity`} />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                    <span className="text-sm font-serif text-foreground">{item.category}</span>
-                  </div>
-                  <div className="absolute inset-0 border border-transparent group-hover:border-primary/30 rounded-sm transition-colors" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
-                      <ZoomIn className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
-          <AnimatedSection delay={0.5}>
-            <div className="text-center mt-10">
-              <Link
-                to="/portfolio"
-                className="inline-flex items-center gap-2 text-sm font-sans text-primary hover:text-gold-light transition-colors"
-              >
-                View Full Portfolio <ArrowRight size={14} />
-              </Link>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="section-padding bg-background">
-        <div className="container-narrow mx-auto">
-          <SectionHeading
-            subtitle="Client Love"
-            title="Words from Our Queens"
-          />
-          <StaggerContainer delay={0.2} staggerDelay={0.15}>
-            {testimonials.map((t, i) => (
-              <StaggerItem key={t.name}>
-                <ParallaxCard offset={10}>
-                  <div className="p-8 rounded-sm bg-card border border-border h-full flex flex-col">
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(5)].map((_, j) => (
-                        <Star key={j} size={14} className="fill-primary text-primary" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed italic flex-1">"{t.quote}"</p>
-                    <div className="mt-6 pt-4 border-t border-border">
-                      <p className="font-serif font-semibold text-foreground">{t.name}</p>
-                      <p className="text-xs text-primary">{t.event}</p>
-                    </div>
-                  </div>
-                </ParallaxCard>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* Instagram Feed */}
+      <Hero onOpenGallery={() => setLightboxIndex(0)} />
+      <TickerBand />
+      <Manifesto />
+      <SignatureServices />
+      <GalleryPreview onOpen={setLightboxIndex} />
+      <Standard />
+      <StatsBand />
+      <TestimonialsStrip />
       <InstagramFeed />
+      <Finale />
 
-      {/* CTA Banner */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-gold opacity-90" />
-        <GoldParticles count={20} className="opacity-30" />
-        <div className="relative z-10 container-narrow mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <AnimatedSection>
-            <Heart className="w-8 h-8 text-primary-foreground/60 mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-primary-foreground mb-4">
-              Ready to Glow?
-            </h2>
-            <p className="text-primary-foreground/80 mb-8 max-w-md mx-auto">
-              Book your session today and let us create the perfect look for your special moment.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link
-                to="/booking"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide bg-primary-foreground text-primary hover:opacity-90 transition-all rounded-sm"
-              >
-                Book Now <ArrowRight size={16} />
-              </Link>
-              <a
-                href="https://wa.me/2348061651126"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 text-sm font-sans font-semibold tracking-wide border border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 transition-all rounded-sm"
-              >
-                WhatsApp Us
-              </a>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* Lightbox */}
       <AnimatePresence>
-        {lightbox !== null && (
-          <Lightbox 
-            images={lightboxImages} 
-            currentIndex={lightbox} 
-            onClose={() => setLightbox(null)} 
-            onNavigate={setLightbox} 
+        {lightboxIndex !== null && (
+          <Lightbox
+            images={galleryImages}
+            captions={["Bridal", "Editorial", "Owambe", "Dark Skin", "Bold", "Soft Glam"]}
+            currentIndex={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+            eyebrow="Selected work"
+            action={
+              <Link to="/portfolio" className="btn btn-gold btn-sm" onClick={() => setLightboxIndex(null)}>
+                View full portfolio
+                <ArrowUpRight size={13} />
+              </Link>
+            }
           />
         )}
       </AnimatePresence>
