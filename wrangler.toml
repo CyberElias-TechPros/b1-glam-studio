@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "b1_glam_db"
-database_id = "b1_glam_db_id"
+database_id = "5bd6b9af-7875-4a64-ba91-5455af4cf579"
 migrations_dir = "worker/src/db/migrations"
 
 # Cloudflare R2 Object Storage for Client & Portfolio Media
@@ -18,7 +18,7 @@ bucket_name = "b1-glam-media"
 # Cloudflare KV for High-Speed Caching & Rate Limiting
 [[kv_namespaces]]
 binding = "CACHE_KV"
-id = "b1_glam_cache_kv_id"
+id = "ac7519753e5d425983950b0a7d2047f1"
 
 # Scheduled Cron Trigger (runs daily at midnight UTC for cleanup/reminders)
 [triggers]
